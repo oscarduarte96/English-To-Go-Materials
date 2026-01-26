@@ -1,0 +1,224 @@
+/* =========================================
+   ENGLISH TO GO MATERIALS - GLOBAL STYLES
+   Estilos base, resets y componentes UI comunes
+   ========================================= */
+
+/* Importamos las variables primero (Vital) */
+@import './variables.css';
+
+/* --- 1. Reset & Base --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-body);
+    color: var(--text-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    
+    /* Fondo Global (Sutil degradado extraído de tu Login/Index) */
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%), 
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.03) 0px, transparent 50%);
+    background-attachment: fixed; /* Para que el fondo no se mueva al scrollear */
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: color var(--transition-fast);
+}
+
+ul {
+    list-style: none;
+}
+
+/* --- 2. Tipografía (Utility Classes) --- */
+.text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+}
+
+/* --- 3. Componentes: Botones (Estandarizados) --- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-lg);
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    border: 1px solid transparent;
+    gap: 0.5rem;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Botón Primario (Indigo) */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    box-shadow: var(--shadow-brand);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Botón Secundario (Blanco con borde) */
+.btn-secondary {
+    background-color: white;
+    color: var(--text-main);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+/* Botón Ghost (Solo texto/icono) */
+.btn-ghost {
+    background-color: transparent;
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+    background-color: rgba(0,0,0,0.05);
+    color: var(--text-main);
+}
+
+/* --- 4. Componentes: Inputs (Campos de texto) --- */
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    margin-left: 0.25rem;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-weight: 500;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.input-field:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); /* Indigo Ring */
+}
+
+/* --- 5. Efectos Visuales (Glass & Cards) --- */
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: var(--shadow-lg);
+}
+
+/* --- 6. Scrollbar Personalizado (Extraído de catalogo.html) --- */
+.custom-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* --- 7. Badges (Etiquetas de Archivos) --- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Variantes de Badges usando Variables */
+.badge-pdf { background: linear-gradient(135deg, var(--badge-pdf-start), var(--badge-pdf-end)); }
+.badge-ppt { background: linear-gradient(135deg, var(--badge-ppt-start), var(--badge-ppt-end)); }
+.badge-doc { background: linear-gradient(135deg, var(--badge-doc-start), var(--badge-doc-end)); }
+.badge-zip { background: linear-gradient(135deg, var(--badge-zip-start), var(--badge-zip-end)); }
+.badge-img { background: linear-gradient(135deg, var(--badge-img-start), var(--badge-img-end)); }
+
+/* --- 8. Animaciones Globales --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* --- 9. Layout Helpers --- */
+.block { display: block; }
+.flex { display: flex; }
+.relative { position: relative; }
+
+/* Lógica de ocultamiento por CSS (Más rápida y segura que JS) */
+
+/* Si app-header tiene el atributo no-sidebar, oculta el botón del menú */
+app-header[no-sidebar] #header-sidebar-toggle {
+    display: none !important;
+}
+
+/* Si app-header tiene el atributo no-cart, oculta el botón del carrito */
+app-header[no-cart] #header-cart-btn {
+    display: none !important;
+}

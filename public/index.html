@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Marketplace de Materiales de Inglés ESL/EFL | English To Go</title>
+    <meta name="description" content="Descarga y vende recursos de inglés verificados. PDFs, worksheets, exámenes internacionales y guías pedagógicas para niveles A1-C2. La plataforma líder para docentes de inglés en Colombia y LATAM.">
+    <meta name="keywords" content="Materiales de Inglés, ESL Marketplace, Recursos para Profesores de Inglés, Worksheets PDF, Exámenes A1-C2, Vender Material Educativo, English To Go, Colombia">
+    <meta name="author" content="English To Go">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://materials.goenglishtogo.com/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://materials.goenglishtogo.com/">
+    <meta property="og:title" content="Marketplace de Materiales de Inglés | English To Go">
+    <meta property="og:description" content="Compra y vende recursos didácticos de alta calidad. Únete a la comunidad de docentes creadores.">
+    <meta property="og:image" content="https://i.imgur.com/O1F7GGy.png"> <meta property="og:locale" content="es_CO">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://materials.goenglishtogo.com/">
+    <meta name="twitter:title" content="Recursos Premium para la Enseñanza del Inglés">
+    <meta name="twitter:description" content="Plataforma centralizada para docentes y estudiantes. Descarga materiales verificados ahora.">
+    <meta name="twitter:image" content="https://i.imgur.com/O1F7GGy.png">
+
+    <link rel="icon" href="https://i.imgur.com/O1F7GGy.png" type="image/png">
+    
+    <link rel="stylesheet" href="/assets/css/global.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            content: ["./assets/js/**/*.js", "./public/**/*.html", "./**/*.html"],
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',  /* Indigo 600 */
+                        secondary: '#06b6d4' /* Cyan 500 */
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Materials To Go - English To Go",
+      "url": "https://materials.goenglishtogo.com/",
+      "description": "Plataforma centralizada para comprar y vender materiales de enseñanza del idioma inglés.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://materials.goenglishtogo.com/catalogo.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "English To Go",
+        "logo": "https://i.imgur.com/O1F7GGy.png"
+      }
+    }
+    </script>
+
+    <script type="module" src="/assets/js/components.js"></script>
+
+    <style>
+        .blob-indigo {
+            position: absolute;
+            top: 0; right: 0;
+            width: 600px; height: 600px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 50%;
+            filter: blur(100px);
+            transform: translate(50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .blob-cyan {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 500px; height: 500px;
+            background: rgba(6, 182, 212, 0.05);
+            border-radius: 50%;
+            filter: blur(100px);
+            transform: translate(-50%, 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col relative overflow-hidden bg-slate-50">
+
+    <div class="blob-indigo" aria-hidden="true"></div>
+    <div class="blob-cyan" aria-hidden="true"></div>
+
+    <app-header no-sidebar="true" no-cart="true"></app-header>
+
+    <main class="flex-grow flex items-center justify-center px-4 relative z-10 md:mt-[74px]">
+        <div class="max-w-4xl w-full text-center py-12 md:py-20">
+            
+            <div class="animate-fade-in">
+                <span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest mb-6 border border-indigo-100">
+                    Marketplace Académico
+                </span>
+            </div>
+
+            <h1 class="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-6 leading-tight animate-fade-in" style="animation-delay: 0.1s;">
+                Recursos Premium para <br>
+                <span class="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-cyan-500">
+                    La Enseñanza del Inglés
+                </span>
+            </h1>
+
+            <p class="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in" style="animation-delay: 0.2s;">
+                Una plataforma centralizada donde docentes y estudiantes convergen. 
+                Descarga <strong>materiales verificados</strong>, exámenes internacionales y guías pedagógicas listos para usar en tu clase.
+            </p>
+
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 animate-fade-in" style="animation-delay: 0.3s;">
+                
+                <a href="/catalogo.html" title="Ver catálogo de materiales" class="btn btn-primary w-full md:w-auto shadow-xl shadow-indigo-500/20 group flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-xl font-bold transition-all">
+                    <span>Explorar Materiales</span>
+                    <i class="fa-solid fa-arrow-right-long group-hover:translate-x-1 transition-transform"></i>
+                </a>
+
+                <a href="/auth/login.html" title="Registrarse como creador" class="btn btn-secondary w-full md:w-auto group flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-3 px-6 rounded-xl font-bold transition-all shadow-sm">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-500 group-hover:text-indigo-600"></i>
+                    <span>Soy Creador</span>
+                </a>
+            </div>
+
+            <div class="mt-16 grid grid-cols-3 gap-4 md:gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500 animate-fade-in" style="animation-delay: 0.4s;">
+                <div class="flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-3xl text-slate-400" aria-hidden="true"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">PDF & Worksheet</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-3xl text-slate-400" aria-hidden="true"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Certificación</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-3xl text-slate-400" aria-hidden="true"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Niveles A1-C2</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <app-footer></app-footer>
+
+</body>
+</html>

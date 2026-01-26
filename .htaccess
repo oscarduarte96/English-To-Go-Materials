@@ -1,0 +1,89 @@
+# ==================================================================
+# CONFIGURACIÓN MAESTRA - ENGLISH TO GO MATERIALS
+# ==================================================================
+
+# 1. SEGURIDAD Y HARDENING
+# ------------------------------------------------------------------
+Options -Indexes -MultiViews
+AddDefaultCharset UTF-8
+
+<IfModule mod_headers.c>
+    # HSTS: Fuerza HTTPS por 1 año (Crucial para seguridad moderna)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
+    # Bloquea iFrames ajenos (Clickjacking)
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Evita MIME Sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Política de Referencia (Privacidad para tus usuarios)
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Cache Control para archivos HTML (Para que los cambios se vean rápido)
+    <FilesMatch "\.(html|php)$">
+        Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+# 2. MOTOR DE REESCRITURA
+# ------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # A) FORZAR HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # B) ELIMINAR SLASH FINAL (Evita contenido duplicado SEO)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # C) ELIMINAR EXTENSIÓN .html (Estética y SEO)
+    # Si el usuario escribe /auth/login, cargamos /auth/login.html internamente
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.html -f
+    RewriteRule ^(.*)$ $1.html [L]
+
+    # D) ENRUTAMIENTO DE LA CARPETA 'PUBLIC' (LA MÁSCARA)
+    # ---------------------------------------------------
+    
+    # CASO 1: La raíz (Home) -> Carga public/index.html
+    RewriteRule ^$ public/index.html [L]
+
+    # CASO 2: Archivos estáticos (CSS/JS/IMG) dentro de public
+    # Si la petición NO empieza por auth, panel o assets...
+    RewriteCond %{REQUEST_URI} !^/(auth|panel|assets|robots\.txt|sitemap\.xml) [NC]
+    # Y el archivo existe dentro de public...
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # CASO 3: Páginas HTML dentro de public (ej: /nosotros -> public/nosotros.html)
+    RewriteCond %{REQUEST_URI} !^/(auth|panel|assets|robots\.txt|sitemap\.xml) [NC]
+    RewriteCond %{DOCUMENT_ROOT}/public/$1.html -f
+    RewriteRule ^(.+)$ public/$1.html [L]
+    
+    # CASO 4: Fallback 404 personalizado (Opcional, crea un 404.html en public)
+    ErrorDocument 404 /public/404.html
+</IfModule>
+
+# 3. COMPRESIÓN GZIP (Velocidad)
+# ------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+# 4. CACHÉ DE NAVEGADOR (Velocidad)
+# ------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 2 days"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>

@@ -1,0 +1,62 @@
+/* =========================================
+   ENGLISH TO GO MATERIALS - VARIABLES
+   Fuente de la verdad para estilos
+   ========================================= */
+
+/* 1. Importación de Fuentes (Google Fonts: Inter) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* --- 2. Tipografía --- */
+    --font-main: 'Inter', sans-serif;
+
+    /* --- 3. Colores Principales (Marca) --- */
+    /* Basados en Indigo-600 e Indigo-50 de tu diseño actual */
+    --color-primary: #4f46e5;       /* Botones, enlaces, destacados */
+    --color-primary-hover: #4338ca; /* Estado hover del primary */
+    --color-primary-light: #eef2ff; /* Fondos suaves, badges */
+    
+    --color-secondary: #06b6d4;     /* Cyan (usado en gradientes) */
+    --color-accent: #10b981;        /* Emerald (éxito, compras) */
+    --color-danger: #ef4444;        /* Rojo (errores, PDFs) */
+
+    /* --- 4. Colores Neutros (Textos y Fondos) --- */
+    /* Basados en la paleta Slate de Tailwind */
+    --bg-body: #f8fafc;             /* Fondo general de la página */
+    --bg-card: #ffffff;             /* Fondo de tarjetas y modales */
+    --bg-input: #f8fafc;            /* Fondo de inputs */
+    
+    --text-main: #0f172a;           /* Títulos, texto fuerte (Slate-900) */
+    --text-body: #334155;           /* Párrafos (Slate-700) */
+    --text-muted: #64748b;          /* Subtítulos, iconos inactivos (Slate-500) */
+    --text-light: #94a3b8;          /* Placeholders (Slate-400) */
+
+    /* --- 5. Bordes y Separadores --- */
+    --border-light: #e2e8f0;        /* Bordes sutiles (Slate-200) */
+    --border-focus: #6366f1;        /* Color de borde al escribir (Indigo-500) */
+
+    /* --- 6. Dimensiones y Layout (Extraído de tu CSS inline) --- */
+    --header-height: 74px;
+    --sidebar-width: 280px;
+    --container-width: 1280px;      /* Max-width estándar */
+    --radius-md: 0.5rem;            /* 8px */
+    --radius-lg: 0.75rem;           /* 12px */
+    --radius-xl: 1rem;              /* 16px */
+    --radius-full: 9999px;
+
+    /* --- 7. Sombras y Efectos --- */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-brand: 0 10px 15px -3px rgba(79, 70, 229, 0.2); /* Sombra indigo */
+    
+    --transition-fast: 0.2s ease;
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Tu transición personalizada */
+
+    /* --- 8. Colores Específicos de Archivos (Tus Badges) --- */
+    --badge-pdf-start: #ef4444; --badge-pdf-end: #dc2626;
+    --badge-ppt-start: #f97316; --badge-ppt-end: #ea580c;
+    --badge-doc-start: #3b82f6; --badge-doc-end: #2563eb;
+    --badge-zip-start: #eab308; --badge-zip-end: #ca8a04;
+    --badge-img-start: #a855f7; --badge-img-end: #9333ea;
+}
