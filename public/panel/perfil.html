@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil | English To Go Materials</title>
+
+    <link rel="icon" href="../assets/img/favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#06b6d4',
+                        accent: '#10b981',
+                        danger: '#ef4444',
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../assets/css/variables.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/responsive.css">
+
+    <style>
+        /* Profile Header Styles */
+        .profile-banner {
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            height: 200px;
+            position: relative;
+        }
+
+        .profile-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .profile-avatar {
+            width: 140px;
+            height: 140px;
+            border: 5px solid white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-avatar-container {
+            margin-top: -70px;
+        }
+
+        /* Edit Mode Styles */
+        .edit-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px dashed #cbd5e1;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .edit-input:focus {
+            border-bottom-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+        }
+
+        /* Social Links */
+        .social-link {
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Product Grid */
+        .product-mini-card {
+            transition: all 0.3s ease;
+        }
+
+        .product-mini-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* CTA Gradient Animation */
+        .cta-gradient {
+            background: linear-gradient(-45deg, #4f46e5, #06b6d4, #10b981, #4f46e5);
+            background-size: 400% 400%;
+            animation: gradient 8s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Skill Tags */
+        .skill-tag {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .skill-tag:hover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+    </style>
+
+    <script type="module" src="../assets/js/components.js"></script>
+    <script type="module" src="./js/guard.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <div class="blob-indigo fixed top-0 left-0 opacity-40 pointer-events-none -z-10"></div>
+    <div class="blob-cyan fixed bottom-0 right-0 opacity-40 pointer-events-none -z-10"></div>
+
+    <app-header no-sidebar="true" class="sticky top-0 z-50"></app-header>
+
+    <div class="flex flex-col min-h-screen pt-[74px]">
+
+        <main class="flex-1 w-full animate-fade-in">
+
+            <!-- ==================== PROFILE HEADER ==================== -->
+            <section class="relative">
+                <!-- Banner -->
+                <div class="profile-banner" id="profileBanner">
+                    <button id="btnEditBanner"
+                        class="absolute bottom-4 right-4 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/30 transition-all flex items-center gap-2 opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-camera"></i>
+                        <span class="hidden sm:inline">Cambiar Banner</span>
+                    </button>
+                </div>
+
+                <!-- Avatar & Basic Info -->
+                <div class="max-w-5xl mx-auto px-4 sm:px-6">
+                    <div class="profile-avatar-container relative z-30">
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+                            <!-- Avatar -->
+                            <div class="relative group">
+                                <img id="profileAvatar" src="https://i.imgur.com/O1F7GGy.png" alt="Foto de perfil"
+                                    class="profile-avatar rounded-full object-cover bg-white">
+                                <button id="btnEditAvatar"
+                                    class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                    <i class="fa-solid fa-camera text-white text-2xl"></i>
+                                </button>
+                            </div>
+
+                            <!-- Name & Meta -->
+                            <div class="flex-1 text-center sm:text-left relative z-30 sm:mt-[85px]">
+                                <div class="flex items-center justify-center sm:justify-start gap-3 mb-1">
+                                    <h1 id="profileName"
+                                        class="text-2xl md:text-3xl font-black text-slate-900 drop-shadow-sm">
+                                        Cargando...
+                                    </h1>
+                                    <!-- Verified Badge (Creators only) -->
+                                    <span id="verifiedBadge"
+                                        class="hidden bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-1">
+                                        <i class="fa-solid fa-check"></i> VERIFICADO
+                                    </span>
+                                </div>
+                                <p id="profileEmail" class="text-slate-500 font-medium text-sm mb-2">
+                                    email@example.com
+                                </p>
+                                <p id="profileJoinDate" class="text-xs text-slate-400">
+                                    <i class="fa-regular fa-calendar mr-1"></i> Miembro desde...
+                                </p>
+                            </div>
+
+                            <!-- Edit Profile Button -->
+                            <div class="flex gap-2 sm:mt-[90px]">
+                                <button id="btnEditProfile" class="btn btn-secondary text-sm py-2 px-4">
+                                    <i class="fa-solid fa-pen"></i>
+                                    <span>Editar Perfil</span>
+                                </button>
+                                <!-- Creator Dashboard Link (Creators Only) -->
+                                <a id="btnCreatorDashboard" href="portafolio.html"
+                                    class="hidden btn btn-primary text-sm py-2 px-4">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <span class="hidden md:inline">Panel de Control</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== MAIN CONTENT ==================== -->
+            <section class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+
+                <!-- ========== CREATOR STATS (Creators Only) - Full Width ========== -->
+                <div id="creatorStats" class="hidden mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="stat-card rounded-2xl p-6 border border-slate-100 text-center shadow-sm">
+                        <div
+                            class="w-12 h-12 bg-indigo-50 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fa-solid fa-box-open text-xl"></i>
+                        </div>
+                        <p class="text-3xl font-black text-slate-800" id="statProducts">0</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Productos</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 border border-slate-100 text-center shadow-sm">
+                        <div
+                            class="w-12 h-12 bg-cyan-50 text-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        </div>
+                        <p class="text-3xl font-black text-slate-800" id="statSales">0</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Ventas</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 border border-slate-100 text-center shadow-sm">
+                        <div
+                            class="w-12 h-12 bg-emerald-50 text-accent rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fa-solid fa-sack-dollar text-xl"></i>
+                        </div>
+                        <p class="text-3xl font-black text-slate-800" id="statIncome">$0</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Ingresos Generados</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                    <!-- LEFT COLUMN: Info & Bio -->
+                    <div class="lg:col-span-1 space-y-6">
+
+                        <!-- Bio Card (Editable for Creators) -->
+                        <div class="card p-6">
+                            <h3
+                                class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-user"></i> Sobre Mí
+                            </h3>
+                            <p id="profileBio" class="text-sm text-slate-600 leading-relaxed">
+                                Aún no has agregado una biografía...
+                            </p>
+                            <button id="btnEditBio" class="hidden mt-4 text-xs text-primary font-bold hover:underline">
+                                <i class="fa-solid fa-pen mr-1"></i> Editar Bio
+                            </button>
+                        </div>
+
+                        <!-- Skills/Specialties (Creators Only) -->
+                        <div id="skillsCard" class="card p-6 hidden">
+                            <h3
+                                class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-award"></i> Especialidades
+                            </h3>
+                            <div id="skillsContainer" class="flex flex-wrap gap-2">
+                                <!-- JS will populate -->
+                            </div>
+                        </div>
+
+                        <!-- Social Links (Creators Only) -->
+                        <div id="socialLinksCard" class="card p-6 hidden">
+                            <h3
+                                class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-link"></i> Redes Sociales
+                            </h3>
+                            <div id="socialLinksContainer" class="flex flex-wrap gap-3">
+                                <!-- JS will populate -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Links (Standard Users) -->
+                        <div id="quickLinksCard" class="card p-6">
+                            <h3
+                                class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-bolt"></i> Accesos Rápidos
+                            </h3>
+                            <div class="space-y-3">
+                                <a href="biblioteca.html"
+                                    class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-primary transition-all group">
+                                    <div
+                                        class="w-10 h-10 bg-cyan-100 text-cyan-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-folder-open"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm">Mi Biblioteca</p>
+                                        <p class="text-xs text-slate-400">Recursos comprados</p>
+                                    </div>
+                                    <i
+                                        class="fa-solid fa-chevron-right ml-auto text-slate-300 group-hover:text-primary"></i>
+                                </a>
+                                <a href="../catalogo.html"
+                                    class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-primary transition-all group">
+                                    <div
+                                        class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm">Explorar Catálogo</p>
+                                        <p class="text-xs text-slate-400">Descubre más materiales</p>
+                                    </div>
+                                    <i
+                                        class="fa-solid fa-chevron-right ml-auto text-slate-300 group-hover:text-primary"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- RIGHT COLUMN: Main Content Area -->
+                    <div class="lg:col-span-2 space-y-6">
+
+
+                        <!-- ========== CREATOR PRODUCTS GRID (Creators Only) ========== -->
+                        <div id="creatorProductsSection" class="hidden">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-store text-primary"></i> Mis Materiales Publicados
+                                </h2>
+                                <a href="publicacion.html"
+                                    class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Subir Nuevo
+                                </a>
+                            </div>
+                            <div id="creatorProductsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- JS will populate with product cards -->
+                                <div class="animate-pulse bg-white rounded-xl h-32 border border-slate-100"></div>
+                                <div class="animate-pulse bg-white rounded-xl h-32 border border-slate-100"></div>
+                            </div>
+                            <div id="noProductsMsg"
+                                class="hidden text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-4"></i>
+                                <p class="text-slate-500 font-medium mb-4">Aún no has publicado ningún material</p>
+                                <a href="publicacion.html" class="btn btn-primary">
+                                    <i class="fa-solid fa-upload"></i> Subir Mi Primer Material
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- ========== CTA: BECOME A CREATOR (Standard Users Only) ========== -->
+                        <div id="becomeCreatorCta" class="hidden">
+                            <div
+                                class="cta-gradient rounded-3xl p-8 md:p-10 text-white shadow-2xl relative overflow-hidden">
+                                <!-- Decorative Elements -->
+                                <div
+                                    class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3">
+                                </div>
+                                <div
+                                    class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3">
+                                </div>
+
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div
+                                            class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+                                            <i class="fa-solid fa-rocket text-2xl"></i>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="text-white/70 text-xs font-bold uppercase tracking-widest">¿Eres
+                                                docente?</span>
+                                            <h2 class="text-2xl md:text-3xl font-black">Conviértete en Creador</h2>
+                                        </div>
+                                    </div>
+
+                                    <p class="text-white/80 text-sm md:text-base leading-relaxed mb-6 max-w-lg">
+                                        Comparte tus materiales educativos con miles de profesores.
+                                        <strong class="text-white">Tú decides el precio</strong> y empiezas a generar
+                                        ingresos
+                                        ayudando a otros docentes.
+                                    </p>
+
+                                    <div class="flex flex-col sm:flex-row gap-4">
+                                        <a href="aplicar-creador.html"
+                                            class="btn bg-white text-primary hover:bg-slate-100 font-bold shadow-xl flex-1 sm:flex-none justify-center">
+                                            <span>Aplicar Ahora</span>
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </a>
+                                        <div class="flex items-center gap-2 text-white/60 text-xs">
+                                            <i class="fa-solid fa-clock"></i>
+                                            <span>Revisión en 24-48 horas</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Benefits List -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm text-center">
+                                    <div
+                                        class="w-12 h-12 bg-indigo-50 text-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa-solid fa-sack-dollar text-xl"></i>
+                                    </div>
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1">Ingresos Pasivos</h4>
+                                    <p class="text-xs text-slate-500">Gana dinero mientras duermes</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm text-center">
+                                    <div
+                                        class="w-12 h-12 bg-cyan-50 text-secondary rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa-solid fa-globe text-xl"></i>
+                                    </div>
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1">Alcance Global</h4>
+                                    <p class="text-xs text-slate-500">Miles de profesores te verán</p>
+                                </div>
+                                <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm text-center">
+                                    <div
+                                        class="w-12 h-12 bg-emerald-50 text-accent rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa-solid fa-shield-check text-xl"></i>
+                                    </div>
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1">Total Control</h4>
+                                    <p class="text-xs text-slate-500">Tú decides precio y términos</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+        <app-footer></app-footer>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="fixed inset-0 z-[100] hidden">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" id="editModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform scale-95 opacity-0 transition-all"
+                id="editModalPanel">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black text-slate-900">Editar Perfil</h3>
+                        <button id="btnCloseEditModal" class="text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="editProfileForm" class="p-6 space-y-4">
+                    <div>
+                        <label class="label">Nombre Completo</label>
+                        <input type="text" id="editName" class="input-field" placeholder="Tu nombre">
+                    </div>
+                    <div id="editBioContainer">
+                        <label class="label">Biografía</label>
+                        <textarea id="editBio" rows="3" maxlength="300" class="input-field resize-none"
+                            placeholder="Cuéntanos sobre ti..."></textarea>
+                        <p class="text-right text-[10px] text-slate-400 mt-1">
+                            <span id="bioCharCount">0</span>/300
+                        </p>
+                    </div>
+                    <div id="editSocialContainer" class="hidden space-y-3">
+                        <label class="label">Redes Sociales</label>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-linkedin text-blue-600 w-5"></i>
+                            <input type="url" id="editLinkedIn" class="input-field text-sm"
+                                placeholder="URL de LinkedIn">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-instagram text-pink-600 w-5"></i>
+                            <input type="url" id="editInstagram" class="input-field text-sm"
+                                placeholder="URL de Instagram">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-globe text-slate-600 w-5"></i>
+                            <input type="url" id="editWebsite" class="input-field text-sm" placeholder="Tu sitio web">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i class="fa-solid fa-save"></i> Guardar Cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="../assets/js/firebase-app.js"></script>
+    <script type="module" src="../assets/js/utils.js"></script>
+    <script type="module" src="./js/perfil.js"></script>
+
+</body>
+
+</html>

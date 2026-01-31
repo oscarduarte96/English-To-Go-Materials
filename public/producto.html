@@ -1,32 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
+    <meta property="og:image" content="./assets/img/og-social.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle del Material | English To Go Materials</title>
-    <link rel="icon" href="https://i.imgur.com/O1F7GGy.png" type="image/png">
-    
+    <link rel="icon" href="./assets/img/favicon.ico">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
+
         :root {
             --header-height: 74px;
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
             color: #0f172a;
         }
 
         /* --- Scrollbar Customizada --- */
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
 
         .main-content {
             padding-top: calc(var(--header-height) + 20px);
@@ -36,12 +51,13 @@
         }
     </style>
 </head>
+
 <body class="antialiased">
 
     <app-header with-search no-sidebar></app-header>
 
     <div class="main-content">
-        
+
         <main class="max-w-7xl mx-auto px-4 sm:px-6 w-full flex-grow pb-16 relative">
 
             <div id="page-loading" class="flex flex-col items-center justify-center py-32 space-y-4">
@@ -51,26 +67,27 @@
 
             <div id="product-detail-container" class="hidden opacity-100 transition-opacity duration-500">
 
-                <button 
-                    type="button"
+                <button type="button"
                     onclick="window.history.length > 1 ? window.history.back() : window.location.href='catalogo.html'"
-                    class="group flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors duration-200 mb-6 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg px-2 py-1 -ml-2"
-                >
+                    class="group flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors duration-200 mb-6 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg px-2 py-1 -ml-2">
                     <i class="fa-solid fa-arrow-left transition-transform duration-200 group-hover:-translate-x-1"></i>
                     <span>Volver</span>
                 </button>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16">
-                    
+
                     <div class="lg:col-span-7 xl:col-span-8">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-2 relative overflow-hidden group">
-                            
+                        <div
+                            class="bg-white rounded-3xl shadow-sm border border-slate-200 p-2 relative overflow-hidden group">
+
                             <div id="prod-badges" class="absolute top-6 left-6 z-10 flex flex-wrap gap-2"></div>
 
                             <div class="aspect-video w-full bg-slate-50 rounded-2xl overflow-hidden relative">
-                                <img id="prod-image" src="" alt="Vista previa" class="w-full h-full object-cover opacity-0 transition-opacity duration-500">
-                                
-                                <div id="prod-image-skeleton" class="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center text-slate-300">
+                                <img id="prod-image" src="" alt="Vista previa"
+                                    class="w-full h-full object-cover opacity-0 transition-opacity duration-500">
+
+                                <div id="prod-image-skeleton"
+                                    class="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center text-slate-300">
                                     <i class="fa-regular fa-image text-5xl"></i>
                                 </div>
                             </div>
@@ -78,36 +95,44 @@
                     </div>
 
                     <div class="lg:col-span-5 xl:col-span-4 space-y-6">
-                        
+
                         <div>
-                            <h1 id="prod-title" class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight mb-4">
-                                </h1>
-                            
+                            <h1 id="prod-title"
+                                class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight mb-4">
+                            </h1>
+
                             <div class="flex items-center gap-3">
-                                <img id="teacher-photo" src="https://ui-avatars.com/api/?name=ETG&background=random" class="w-10 h-10 rounded-full border border-slate-200 object-cover">
+                                <img id="teacher-photo" src="https://ui-avatars.com/api/?name=ETG&background=random"
+                                    class="w-10 h-10 rounded-full border border-slate-200 object-cover">
                                 <div class="text-sm">
                                     <span class="text-slate-400 block text-xs">Creado por:</span>
-                                    <a href="#" id="teacher-profile-link" class="font-bold text-indigo-600 hover:underline">
+                                    <a href="#" id="teacher-profile-link"
+                                        class="font-bold text-indigo-600 hover:underline">
                                         <span id="teacher-name">English To Go</span>
                                     </a>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-lg shadow-indigo-500/5 sticky top-24 z-20">
-                            
+                        <div
+                            class="bg-white rounded-2xl border border-slate-200 p-6 shadow-lg shadow-indigo-500/5 sticky top-24 z-20">
+
                             <div class="flex items-end gap-2 mb-6">
-                                <span id="prod-price" class="text-4xl font-black text-slate-900 tracking-tight">$0.00</span>
-                                <span id="prod-price-old" class="text-slate-400 text-sm font-medium mb-1 line-through hidden"></span>
+                                <span id="prod-price"
+                                    class="text-4xl font-black text-slate-900 tracking-tight">$0.00</span>
+                                <span id="prod-price-old"
+                                    class="text-slate-400 text-sm font-medium mb-1 line-through hidden"></span>
                             </div>
 
                             <div class="space-y-3">
-                                <button id="btn-add-to-cart" class="w-full py-3.5 px-6 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-indigo-500/30 flex items-center justify-center gap-3 group active:scale-95">
+                                <button id="btn-add-to-cart"
+                                    class="w-full py-3.5 px-6 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-indigo-500/30 flex items-center justify-center gap-3 group active:scale-95">
                                     <i class="fa-solid fa-cart-plus text-lg group-hover:animate-bounce"></i>
                                     <span>Agregar al Carrito</span>
                                 </button>
-                                
-                                <div class="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-medium pt-2">
+
+                                <div
+                                    class="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-medium pt-2">
                                     <i class="fa-solid fa-shield-halved text-indigo-400"></i>
                                     <span>Descarga Inmediata y Segura</span>
                                 </div>
@@ -120,19 +145,19 @@
                             </h4>
                             <ul class="text-sm text-slate-600 space-y-3">
                                 <li class="flex justify-between border-b border-indigo-100 pb-2">
-                                    <span>Nivel:</span> 
+                                    <span>Nivel:</span>
                                     <span id="meta-level" class="font-bold text-slate-800 text-right">-</span>
                                 </li>
                                 <li class="flex justify-between border-b border-indigo-100 pb-2">
-                                    <span>Habilidad (Skill):</span> 
+                                    <span>Habilidad (Skill):</span>
                                     <span id="meta-skill" class="font-semibold text-slate-800 text-right">-</span>
                                 </li>
                                 <li class="flex justify-between border-b border-indigo-100 pb-2">
-                                    <span>Tipo de Recurso:</span> 
+                                    <span>Tipo de Recurso:</span>
                                     <span id="meta-type" class="font-semibold text-slate-800 text-right">-</span>
                                 </li>
                                 <li class="flex justify-between pt-1">
-                                    <span>Contexto:</span> 
+                                    <span>Contexto:</span>
                                     <span id="meta-context" class="font-semibold text-slate-800 text-right">-</span>
                                 </li>
                             </ul>
@@ -145,18 +170,19 @@
                     <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-align-left text-indigo-500"></i> Descripción del Material
                     </h3>
-                    <div id="prod-description" class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        </div>
+                    <div id="prod-description"
+                        class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    </div>
                 </div>
 
                 <div class="border-t border-slate-200 pt-12">
                     <h3 class="text-xl font-black text-slate-800 mb-6">También te podría interesar</h3>
-                    
+
                     <div id="related-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        </div>
+                    </div>
                 </div>
 
-            </div> 
+            </div>
         </main>
 
         <app-footer></app-footer>
@@ -167,10 +193,11 @@
     <script type="module" src="../assets/js/firebase-app.js"></script>
     <script type="module" src="../assets/js/utils.js"></script>
     <script type="module" src="../assets/js/components.js"></script>
-    
+
     <script type="module" src="js/cart.js"></script>
-    
+
     <script type="module" src="js/producto.js"></script>
 
 </body>
+
 </html>

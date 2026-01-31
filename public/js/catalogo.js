@@ -7,10 +7,11 @@
  */
 
 // 1. IMPORTACIONES
-import { db } from "../../assets/js/firebase-app.js";
+import { db, auth } from "../../assets/js/firebase-app.js";
 import {
-    collection, getDocs, query, orderBy, where
+    collection, getDocs, query, orderBy, where, addDoc, serverTimestamp, doc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
 // 2. CONFIGURACIÓN (CATEGORÍAS)
 const CATEGORIAS = {
@@ -38,7 +39,8 @@ const localState = {
         type: "",
         context: "",
         exam: "",
-        teacherId: null
+        teacherId: null,
+        price: ""
     }
 };
 
@@ -61,7 +63,8 @@ const ui = {
         grammar: document.getElementById('filter-grammar'),
         type: document.getElementById('filter-type'),
         context: document.getElementById('filter-context'),
-        exam: document.getElementById('filter-exam')
+        exam: document.getElementById('filter-exam'),
+        price: document.getElementById('filter-price')
     },
     grid: document.getElementById('grid-productos'),
     resultCount: document.getElementById('resultCount'),
@@ -98,12 +101,59 @@ async function init() {
     populateSelects();
     setupEvents();
     setupModalLogic(); // Nueva lógica del modal
+    setupCreatorCta(); // CTA visibility for logged-in non-creators
 
     // Carga paralela: Profesores y Productos
     await Promise.all([
         fetchTeachers(),
         fetchAllProducts()
     ]);
+}
+
+/**
+ * Show Creator CTA only for logged-in users who are NOT already creators.
+ */
+
+function setupCreatorCta() {
+    const creatorCta = document.getElementById('creatorCta');
+    if (!creatorCta) {
+        console.warn("[CreatorCTA] Element #creatorCta not found in DOM.");
+        return;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            console.log("[CreatorCTA] User not logged in. Hiding CTA.");
+            creatorCta.classList.add('hidden');
+            return;
+        }
+
+        try {
+            console.log("[CreatorCTA] Checking role for user:", user.uid);
+            const userRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(userRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const isTeacher = !!(data.roles && data.roles.teacher); // Force boolean
+
+                console.log(`[CreatorCTA] Role data loaded. isTeacher=${isTeacher}`);
+
+                if (!isTeacher) {
+                    console.log("[CreatorCTA] User is NOT a teacher. Showing CTA.");
+                    creatorCta.classList.remove('hidden');
+                } else {
+                    console.log("[CreatorCTA] User IS a teacher. Keeping CTA hidden.");
+                    // Ensure it stays hidden if they are a teacher
+                    creatorCta.classList.add('hidden');
+                }
+            } else {
+                console.warn("[CreatorCTA] User document does not exist in Firestore.");
+            }
+        } catch (error) {
+            console.error("[CreatorCTA] Error checking user role:", error);
+        }
+    });
 }
 
 function createLoadMoreButton() {
@@ -210,9 +260,14 @@ function setupModalLogic() {
     ui.modal.backdrop.onclick = close;
 
     // Add to Cart en Modal
+    // Add to Cart en Modal
     ui.modal.btnAdd.onclick = () => {
         if (localState.currentProduct) {
-            handleQuickAdd(localState.currentProduct, ui.modal.btnAdd);
+            if (localState.currentProduct.es_gratis) {
+                handleFreeDownload(localState.currentProduct, ui.modal.btnAdd);
+            } else {
+                handleQuickAdd(localState.currentProduct, ui.modal.btnAdd);
+            }
         }
     };
 
@@ -286,6 +341,10 @@ function applyFilters() {
         if (f.type && !p.types?.includes(f.type)) return false;
         if (f.context && !p.context?.includes(f.context)) return false;
         if (f.exam && !p.exams?.includes(f.exam)) return false;
+
+        if (f.price === 'free' && !p.es_gratis) return false;
+        if (f.price === 'paid' && p.es_gratis) return false;
+
         return true;
     });
 
@@ -315,8 +374,8 @@ function renderGrid() {
     ui.grid.innerHTML = "";
 
     visibleProducts.forEach(p => {
-        const meta = getFileMeta(p.tipo_archivo);
-        const price = window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`;
+        const meta = getFileMeta(p.tipo_archivo, p.tipo_entrega);
+        const price = p.es_gratis ? "GRATIS" : (window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`);
         const teacherName = p.creador_nombre || p.autor || "English To Go";
 
         const imgHTML = p._img
@@ -327,7 +386,7 @@ function renderGrid() {
         if (p.levels) p.levels.slice(0, 2).forEach(l => tagsHTML += `<span class="text-[10px] text-indigo-600 bg-white/60 px-2 py-1 rounded border border-indigo-100 font-bold backdrop-blur-sm">${l.split('(')[0]}</span>`);
 
         const card = document.createElement('div');
-        card.className = "card-enter bg-white rounded-2xl shadow-xl border border-slate-200 group flex flex-col h-full cursor-pointer hover:-translate-y-2 transition-all duration-300 overflow-hidden";
+        card.className = "card-enter w-full min-w-[280px] max-w-[400px] sm:max-w-none justify-self-stretch bg-white rounded-2xl shadow-xl border border-slate-200 group flex flex-col h-full cursor-pointer hover:-translate-y-2 transition-all duration-300 overflow-hidden";
         card.setAttribute('data-product-id', p.id);
 
         const shareBtnId = `btn-share-${p.id}`;
@@ -337,7 +396,8 @@ function renderGrid() {
             <!-- Image Section -->
             <div class="relative h-56 w-full overflow-hidden bg-slate-100">
                 ${imgHTML}
-                <div class="absolute top-3 right-3 z-10">
+                <div class="absolute top-3 right-3 z-10 flex gap-2">
+                    ${p.es_gratis ? `<span class="file-badge-free text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-2 tracking-wider shadow-lg"><i class="fa-solid fa-gift"></i> GRATIS</span>` : ''}
                     <span class="${meta.class} text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-2 tracking-wider shadow-lg">${meta.icon} ${meta.label}</span>
                 </div>
             </div>
@@ -367,7 +427,7 @@ function renderGrid() {
                     <!-- Action Bar (Responsive Grid/Flex) -->
                     <div class="flex items-center gap-2 pt-2 lg:grid lg:grid-cols-[1fr_auto] lg:gap-x-0 lg:gap-y-3 lg:pt-0">
                         <!-- Price: Left on Mobile, Top-Left on Desktop -->
-                        <span class="text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight mr-auto lg:mr-0 lg:col-start-1 lg:row-start-1" title="${price}">${price}</span>
+                        <span class="text-base md:text-lg font-black ${p.es_gratis ? 'text-emerald-600' : 'text-slate-900'} tracking-tight leading-tight mr-auto lg:mr-0 lg:col-start-1 lg:row-start-1" title="${price}">${price}</span>
                         
                         <!-- Share: Right next to Add on Mobile, Top-Right on Desktop -->
                         <button id="${shareBtnId}" class="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors lg:col-start-2 lg:row-start-1 lg:justify-self-end" title="Compartir">
@@ -398,7 +458,11 @@ function renderGrid() {
         const addBtn = document.getElementById(addBtnId);
         addBtn.onclick = (e) => {
             e.stopPropagation();
-            handleQuickAdd(p, addBtn);
+            if (p.es_gratis) {
+                handleFreeDownload(p, addBtn);
+            } else {
+                handleQuickAdd(p, addBtn);
+            }
         };
 
         // 4. Estado Inicial del Botón
@@ -425,7 +489,7 @@ function openProductModal(p) {
             ? p.imagenes_preview
             : (p._img ? [p._img] : []);
 
-        const meta = getFileMeta(p.tipo_archivo);
+        const meta = getFileMeta(p.tipo_archivo, p.tipo_entrega);
 
         if (images.length === 0) {
             // Fallback placeholder
@@ -489,8 +553,16 @@ function openProductModal(p) {
     m.skill.innerText = p.skills ? p.skills.join(", ") : "Varias";
     m.grammar.innerText = p.grammar ? p.grammar.join(", ") : "General";
 
-    const price = window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`;
+    const price = p.es_gratis ? "GRATIS" : (window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`);
     m.price.innerText = price;
+
+    if (p.es_gratis) {
+        m.price.classList.add('text-emerald-600');
+        m.price.classList.remove('text-slate-900');
+    } else {
+        m.price.classList.add('text-slate-900');
+        m.price.classList.remove('text-emerald-600');
+    }
 
     // Actualizar estado botón Modal
     updateButtonState(m.btnAdd, p.id);
@@ -647,6 +719,25 @@ function updateButtonState(btnElement, productId) {
     if (!btnElement) return;
     const state = getCartButtonState(productId);
 
+    // 0. Mirar si es GRATIS
+    const product = localState.allProducts.find(p => p.id === productId);
+    if (product?.es_gratis) {
+        // Estilo "DESCARGAR"
+        btnElement.className = btnElement.className.replace(/bg-slate-900|hover:bg-indigo-600|bg-emerald-50|text-emerald-600|border-emerald-200/g, '');
+        btnElement.classList.add('bg-emerald-600', 'text-white', 'hover:bg-emerald-700', 'shadow-emerald-200');
+
+        // Texto según contexto
+        if (btnElement.id === 'modalBtnAdd') {
+            btnElement.innerHTML = `<span>Descargar Ahora</span> <i class="fa-solid fa-cloud-arrow-down group-hover:animate-bounce"></i>`;
+            btnElement.classList.add('shadow-lg', 'shadow-emerald-200');
+        } else {
+            btnElement.innerHTML = `<i class="fa-solid fa-download"></i> Descargar`;
+            btnElement.classList.add('bg-emerald-600', 'text-white'); // Re-force just in case
+        }
+        btnElement.disabled = false;
+        return;
+    }
+
     if (state.inCart) {
         // Estado: YA EN CARRITO
         btnElement.classList.remove('bg-slate-900', 'hover:bg-indigo-600', 'text-white');
@@ -705,7 +796,8 @@ async function handleQuickAdd(product, btnElement) {
 async function handleShare(product) {
     const url = window.location.href.split('?')[0] + `?id=${product.id}`; // O link directo al producto
     // Texto persuasivo
-    const text = `🔥 ¡Profe, mira este material! "${product.titulo}" te va a ahorrar horas de planeación. Cuesta solo $${product.precio}. Descárgalo aquí: ${url}`;
+    const priceText = product.es_gratis ? "¡Es GRATIS!" : `Cuesta solo $${product.precio}`;
+    const text = `🔥 ¡Profe, mira este material! "${product.titulo}" te va a ahorrar horas de planeación. ${priceText}. Descárgalo aquí: ${url}`;
 
     try {
         if (navigator.share) {
@@ -720,6 +812,67 @@ async function handleShare(product) {
         }
     } catch (err) {
         console.error("Error compartiendo:", err);
+    }
+}
+
+/**
+ * PROCESO DE DESCARGA DIRECTA (Solo Gratuitos)
+ */
+async function handleFreeDownload(product, btnElement) {
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert("Para descargar materiales gratuitos, por favor inicia sesión o regístrate.");
+        sessionStorage.setItem('redirect_after_login', window.location.href);
+        window.location.href = './auth/login.html';
+        return;
+    }
+
+    // UI Loading
+    const originalText = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
+
+    try {
+        // Crear orden "completed" directamente
+        const orderData = {
+            user_id: user.uid,
+            user_email: user.email,
+            user_name: user.displayName || "Usuario",
+            items: [{
+                id: product.id,
+                titulo: product.titulo,
+                precio: 0,
+                imagen: product._img || null,
+                tipo: product.tipo_archivo || 'Digital',
+                autor_id: product.creador_uid || 'unknown'
+            }],
+            original_total: 0,
+            discount_amount: 0,
+            final_total: 0,
+            currency: 'COP',
+            status: 'completed',
+            payment_method: 'free_download',
+            created_at: serverTimestamp(),
+            platform: 'web_catalog_direct'
+        };
+
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+        console.log("Descarga registrada con ID:", docRef.id);
+
+        // Éxito visual
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
+
+        setTimeout(() => {
+            alert("¡Material añadido a tu biblioteca!");
+            window.location.href = './panel/biblioteca.html';
+        }, 500);
+
+    } catch (error) {
+        console.error("Error procesando descarga:", error);
+        alert("Hubo un error al procesar la descarga. Intenta nuevamente.");
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalText;
     }
 }
 
@@ -764,13 +917,13 @@ function selectTeacher(id) {
 
 function updateUIControls() {
     const f = localState.filters;
-    const active = f.search || f.level || f.skill || f.grammar || f.type || f.context || f.exam || f.teacherId;
+    const active = f.search || f.level || f.skill || f.grammar || f.type || f.context || f.exam || f.teacherId || f.price;
     if (ui.resetBtn) ui.resetBtn.classList.toggle('hidden', !active);
     if (ui.clearSearch) ui.clearSearch.classList.toggle('hidden', !f.search);
 }
 
 function resetAllFilters() {
-    localState.filters = { search: "", level: "", skill: "", grammar: "", type: "", context: "", exam: "", teacherId: null };
+    localState.filters = { search: "", level: "", skill: "", grammar: "", type: "", context: "", exam: "", teacherId: null, price: "" };
     if (ui.searchInput) ui.searchInput.value = "";
     Object.values(ui.selects).forEach(s => s.value = "");
     if (ui.teacherSearch) ui.teacherSearch.value = "";
@@ -794,13 +947,25 @@ function toggleSidebar(forceOpen = null) {
     }
 }
 
-function getFileMeta(t) {
+function getFileMeta(t, deliveryType = 'file') {
+    // 1. Si es Web App / URL
+    if (deliveryType === 'url') {
+        return {
+            icon: '<i class="fa-solid fa-globe"></i>',
+            label: 'WEB APP 🌐',
+            class: 'bg-cyan-500 text-white'
+        };
+    }
+
+    // 2. Si es Archivo
     t = (t || '').toLowerCase();
-    if (['zip', 'rar'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-file-zipper"></i>', label: 'ZIP', class: 'bg-amber-500' };
-    if (['ppt', 'pptx'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-file-powerpoint"></i>', label: 'PPT', class: 'bg-orange-500' };
-    if (['doc', 'docx'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-file-word"></i>', label: 'DOC', class: 'bg-blue-600' };
-    if (['jpg', 'jpeg', 'png', 'webp'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-image"></i>', label: 'IMG', class: 'bg-purple-600' };
-    return { icon: '<i class="fa-solid fa-file-pdf"></i>', label: 'PDF', class: 'bg-red-500' };
+    if (['zip', 'rar'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-file-zipper"></i>', label: 'Descargable: ZIP', class: 'bg-amber-500 text-white' };
+    if (['ppt', 'pptx'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-file-powerpoint"></i>', label: 'Descargable: PPT', class: 'bg-orange-500 text-white' };
+    if (['doc', 'docx'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-file-word"></i>', label: 'Descargable: DOC', class: 'bg-blue-600 text-white' };
+    if (['jpg', 'jpeg', 'png', 'webp'].some(ext => t.includes(ext))) return { icon: '<i class="fa-solid fa-image"></i>', label: 'Descargable: IMG', class: 'bg-purple-600 text-white' };
+
+    // Default PDF
+    return { icon: '<i class="fa-solid fa-file-pdf"></i>', label: 'Descargable: PDF', class: 'bg-red-500 text-white' };
 }
 
 document.addEventListener('DOMContentLoaded', init);

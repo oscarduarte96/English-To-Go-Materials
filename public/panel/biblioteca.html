@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Biblioteca | English To Go Materials</title>
+
+    <link rel="icon" href="../assets/img/favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4f46e5',   // Indigo
+                        secondary: '#06b6d4', // Cyan
+                        accent: '#10b981',    // Emerald
+                        danger: '#ef4444',    // Red
+                        slate: {
+                            50: '#f8fafc',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../assets/css/variables.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/responsive.css">
+
+    <style>
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .resource-card {
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script type="module" src="../assets/js/components.js"></script>
+    <script type="module" src="./js/guard.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <div class="blob-indigo fixed top-0 left-0 opacity-40 pointer-events-none -z-10"></div>
+    <div class="blob-cyan fixed bottom-0 right-0 opacity-40 pointer-events-none -z-10"></div>
+
+    <app-header class="sticky top-0 z-50" no-sidebar="true"></app-header>
+
+    <div class="flex flex-col min-h-screen pt-[74px]">
+
+        <main class="flex-1 p-6 w-full max-w-[1280px] mx-auto animate-fade-in">
+
+            <!-- Encabezado de la página -->
+            <div class="mb-8 mt-2">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">
+                            Mi <span class="text-gradient">Biblioteca</span> 📚
+                        </h1>
+                        <p class="text-slate-500 font-medium text-lg">
+                            Gestiona y accede a tus recursos comprados.
+                        </p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all filter-btn active"
+                            data-type="all">
+                            Todos
+                        </button>
+                        <button
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all filter-btn"
+                            data-type="file">
+                            Archivos
+                        </button>
+                        <button
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all filter-btn"
+                            data-type="url">
+                            Online
+                        </button>
+                        <button
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all filter-btn"
+                            data-type="favorite">
+                            <i class="fa-solid fa-heart text-danger"></i> Favoritos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra de Herramientas (Búsqueda y Orden) -->
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+
+                    <div class="relative w-full md:w-96">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput"
+                            class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            placeholder="Buscar por título o autor...">
+                    </div>
+
+                    <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                        <span id="resultsCount" class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Cargando...
+                        </span>
+
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-slate-600 hidden sm:inline">Ordenar:</span>
+                            <select id="sortSelect"
+                                class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-primary focus:border-primary block p-2">
+                                <option value="newest">Más Recientes</option>
+                                <option value="oldest">Más Antiguos</option>
+                                <option value="az">A-Z</option>
+                                <option value="za">Z-A</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor de Recursos -->
+            <div id="library-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Skeleton Loading -->
+                <div class="animate-pulse bg-white rounded-2xl h-64 border border-slate-100 shadow-sm"></div>
+                <div class="animate-pulse bg-white rounded-2xl h-64 border border-slate-100 shadow-sm"></div>
+                <div class="animate-pulse bg-white rounded-2xl h-64 border border-slate-100 shadow-sm"></div>
+                <div class="animate-pulse bg-white rounded-2xl h-64 border border-slate-100 shadow-sm"></div>
+            </div>
+
+            <!-- Estado Vacío -->
+            <div id="empty-library" class="hidden flex flex-col items-center justify-center py-24 text-center">
+                <div
+                    class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-md border border-slate-100">
+                    <i class="fa-solid fa-book-open text-4xl text-slate-200"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Aún no tienes recursos</h3>
+                <p class="text-slate-500 text-sm max-w-md mx-auto mb-6">
+                    Explora nuestro catálogo y adquiere material de alta calidad para tus clases.
+                </p>
+                <a href="../catalogo.html"
+                    class="px-6 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200">
+                    Explorar Catálogo
+                </a>
+            </div>
+
+        </main>
+        <app-footer></app-footer>
+    </div>
+
+    <!-- Modales y Overlays (Carrito si es necesario) -->
+    <app-cart-drawer></app-cart-drawer>
+
+    <!-- MODAL DE DETALLES DE PRODUCTO (Adaptado para Biblioteca) -->
+    <div id="productModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity opacity-0"
+            id="productModalBackdrop"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-0 text-center sm:p-4">
+
+                <!-- Modal Panel -->
+                <div class="relative transform overflow-hidden bg-white text-left shadow-2xl transition-all w-full sm:max-w-4xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 flex flex-col h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-2xl mt-auto sm:mt-0"
+                    id="productModalPanel">
+
+                    <!-- Botón Cerrar Flotante -->
+                    <button id="btnCloseModal"
+                        class="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-md h-10 w-10 flex items-center justify-center rounded-full text-slate-500 hover:text-red-500 transition-colors shadow-lg border border-white/50">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+
+                    <div class="flex flex-col md:flex-row h-full overflow-hidden">
+
+                        <!-- 1. Columna Visual (Galería) -->
+                        <div class="w-full md:w-1/2 bg-slate-100 relative group flex-shrink-0 h-[35vh] md:h-auto overflow-hidden"
+                            id="modalGalleryContainer">
+                            <!-- JS inyectará las imágenes aquí -->
+                        </div>
+
+                        <!-- 2. Columna Info -->
+                        <div class="w-full md:w-1/2 flex flex-col bg-white min-h-0 flex-1">
+
+                            <!-- Header Info -->
+                            <div class="flex-grow overflow-y-auto custom-scroll p-6 md:p-8">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span id="modalLevelTag"
+                                        class="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                                        Nivel
+                                    </span>
+                                </div>
+
+                                <h2 id="modalTitle"
+                                    class="text-2xl md:text-3xl font-black text-slate-900 leading-tight mb-4 text-balance">
+                                    Título del Material
+                                </h2>
+
+                                <div class="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
+                                    <img id="modalTeacherImg" src="" class="w-10 h-10 rounded-full bg-slate-200">
+                                    <div>
+                                        <p class="text-xs text-slate-400 font-bold uppercase">Creado por</p>
+                                        <p id="modalTeacherName" class="text-sm font-bold text-slate-700">English To Go
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="prose prose-slate prose-sm text-slate-500 mb-6">
+                                    <p id="modalDesc">Descripción completa del material...</p>
+                                </div>
+
+                                <!-- Metadata Grid -->
+                                <div class="grid grid-cols-2 gap-4 text-xs">
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <span
+                                            class="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Tipo</span>
+                                        <span id="modalType" class="font-bold text-slate-700">-</span>
+                                    </div>
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <span
+                                            class="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Formato</span>
+                                        <span id="modalFormat" class="font-bold text-slate-700">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Sticky Actions -->
+                            <div
+                                class="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white/95 backdrop-blur z-20 shadow-[0_-5px_30px_rgba(0,0,0,0.05)]">
+
+                                <div class="grid grid-cols-[auto_1fr] gap-3">
+                                    <button id="modalBtnShare"
+                                        class="w-14 h-14 flex items-center justify-center rounded-2xl border-2 border-slate-100 text-slate-400 hover:text-cyan-600 hover:border-cyan-200 hover:bg-cyan-50 transition-all">
+                                        <i class="fa-solid fa-share-nodes text-xl"></i>
+                                    </button>
+
+                                    <!-- Botón Principal: DESCARGAR/ACCEDER -->
+                                    <a id="modalBtnPrimary" href="#" target="_blank"
+                                        class="h-14 bg-slate-900 text-white font-bold rounded-2xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200 active:scale-95 flex items-center justify-center gap-2 group no-underline">
+                                        <span>Descargar Material</span>
+                                        <i class="fa-solid fa-download group-hover:animate-bounce"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="../assets/js/firebase-app.js"></script>
+    <script type="module" src="../assets/js/utils.js"></script>
+    <script type="module" src="./js/biblioteca.js"></script>
+    <script type="module" src="../js/cart.js"></script>
+
+</body>
+
+</html>

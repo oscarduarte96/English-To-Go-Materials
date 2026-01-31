@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicar como Creador | English To Go Materials</title>
+
+    <link rel="icon" href="../assets/img/favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../assets/css/variables.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/responsive.css">
+
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <div class="blob-indigo fixed top-0 left-0 opacity-40 pointer-events-none -z-10"></div>
+    <div class="blob-cyan fixed bottom-0 right-0 opacity-40 pointer-events-none -z-10"></div>
+
+    <app-header no-sidebar="true" no-cart="true" class="sticky top-0 z-50"></app-header>
+
+    <div class="flex flex-col min-h-screen pt-[74px]">
+
+        <main class="flex-1 p-6 w-full max-w-3xl mx-auto animate-fade-in">
+
+            <!-- Page Header -->
+            <div class="mb-8 mt-2 text-center">
+                <span
+                    class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest mb-4 border border-indigo-100">
+                    Programa de Creadores
+                </span>
+                <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
+                    Aplica para ser <span class="text-gradient">Creador Verificado</span>
+                </h1>
+                <p class="text-slate-500 font-medium text-lg max-w-xl mx-auto">
+                    Únete a nuestra red de docentes expertos. Completa el formulario para que nuestro equipo pedagógico
+                    revise tu perfil.
+                </p>
+            </div>
+
+            <!-- Application Form Card -->
+            <div class="card p-8 mb-8">
+
+                <form id="creatorApplicationForm" class="space-y-6">
+
+                    <!-- 1. Professional Profile URL -->
+                    <div>
+                        <label class="label">Perfil Profesional (URL) <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-slate-400 mb-2">LinkedIn, sitio web personal o perfil de Behance.</p>
+                        <input type="url" id="profileUrl" placeholder="https://linkedin.com/in/tu-perfil"
+                            class="input-field" required>
+                    </div>
+
+                    <!-- 2. Educational Niche -->
+                    <div>
+                        <label class="label">Nicho Educativo <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-slate-400 mb-2">¿En qué área te especializas?</p>
+                        <select id="educationalNiche" class="input-field" required>
+                            <option value="" disabled selected>Selecciona tu especialidad...</option>
+                            <option value="Inglés para Niños">Inglés para Niños</option>
+                            <option value="Business English">Business English</option>
+                            <option value="Preparación de Exámenes (IELTS/TOEFL)">Preparación de Exámenes (IELTS/TOEFL)
+                            </option>
+                            <option value="Gramática Avanzada">Gramática Avanzada</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. Quality Sample URL -->
+                    <div>
+                        <label class="label">Prueba de Calidad (URL) <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-slate-400 mb-2">Link a Google Drive o portafolio con un material de
+                            muestra.</p>
+                        <input type="url" id="sampleUrl" placeholder="https://drive.google.com/..." class="input-field"
+                            required>
+                    </div>
+
+                    <!-- 4. Motivation -->
+                    <div>
+                        <label class="label">Motivación <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-slate-400 mb-2">¿Por qué quieres vender en English To Go?</p>
+                        <textarea id="motivation" rows="4" maxlength="500"
+                            placeholder="Cuéntanos sobre tu experiencia docente y por qué te interesa nuestra plataforma..."
+                            class="input-field resize-none" required></textarea>
+                        <div class="text-right text-[10px] text-slate-400 mt-1 font-medium">
+                            <span id="charCount">0</span>/500 caracteres
+                        </div>
+                    </div>
+
+                    <!-- 5. Contact Phone -->
+                    <div>
+                        <label class="label">WhatsApp / Teléfono <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-slate-400 mb-2">Para coordinación de pagos y comunicación.</p>
+                        <input type="tel" id="phone" placeholder="+57 300 123 4567" class="input-field" required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="btnSubmit"
+                        class="btn btn-primary w-full py-4 px-6 text-lg tracking-wide flex justify-center items-center gap-3 shadow-xl">
+                        <span>Enviar Solicitud</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+
+                    <!-- Status Message -->
+                    <div id="statusMessage" class="hidden text-center p-4 rounded-xl"></div>
+
+                </form>
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-slate-100 rounded-2xl p-6 border border-slate-200 text-center">
+                <i class="fa-solid fa-shield-halved text-3xl text-slate-400 mb-3"></i>
+                <p class="text-sm text-slate-500 font-medium">
+                    Nuestro equipo pedagógico revisará tu solicitud y te contactará en <strong
+                        class="text-slate-700">24-48 horas</strong>.
+                </p>
+            </div>
+
+        </main>
+
+        <app-footer></app-footer>
+    </div>
+
+    <script type="module" src="../assets/js/firebase-app.js"></script>
+    <script type="module" src="../assets/js/components.js"></script>
+    <script type="module" src="js/guard.js"></script>
+    <script type="module" src="js/aplicar-creador.js"></script>
+
+</body>
+
+</html>

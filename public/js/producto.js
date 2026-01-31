@@ -9,23 +9,26 @@
 
 // 1. IMPORTACIONES
 import { db } from "../../assets/js/firebase-app.js";
-import { 
-    doc, 
-    getDoc, 
-    collection, 
-    query, 
-    where, 
-    limit, 
+import {
+    doc,
+    getDoc,
+    collection,
+    query,
+    where,
+    limit,
     getDocs,
-    orderBy
+    orderBy,
+    addDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { auth } from "../../assets/js/firebase-app.js";
 
 // 2. REFERENCIAS AL DOM
 const ui = {
     // Contenedores principales
     mainContainer: document.getElementById('product-detail-container'),
     loadingSpinner: document.getElementById('page-loading'),
-    
+
     // Información del producto
     image: document.getElementById('prod-image'),
     imageSkeleton: document.getElementById('prod-image-skeleton'),
@@ -34,16 +37,16 @@ const ui = {
     priceOld: document.getElementById('prod-price-old'),
     description: document.getElementById('prod-description'),
     badgesContainer: document.getElementById('prod-badges'),
-    
+
     // Acción Principal (NUEVO)
     btnAddToCart: document.getElementById('btn-add-to-cart'),
-    
+
     // Sidebar / Info Meta
     metaLevel: document.getElementById('meta-level'),
     metaSkill: document.getElementById('meta-skill'),
     metaType: document.getElementById('meta-type'),
     metaContext: document.getElementById('meta-context'),
-    
+
     // Información del Creador (Teacher)
     teacherName: document.getElementById('teacher-name'),
     teacherPhoto: document.getElementById('teacher-photo'),
@@ -82,8 +85,8 @@ async function initProductPage(id) {
         console.error("Error cargando producto:", error);
         ui.mainContainer.innerHTML = `<div class="text-center py-20 text-slate-500">Hubo un error al cargar el material.</div>`;
     } finally {
-        if(ui.loadingSpinner) ui.loadingSpinner.classList.add('hidden');
-        if(ui.mainContainer) ui.mainContainer.classList.remove('hidden');
+        if (ui.loadingSpinner) ui.loadingSpinner.classList.add('hidden');
+        if (ui.mainContainer) ui.mainContainer.classList.remove('hidden');
     }
 }
 
@@ -102,15 +105,25 @@ async function fetchProductData(id) {
 // 5. RENDERIZADO
 function renderProduct(data) {
     // A. Títulos y Textos Básicos
-    if(ui.title) ui.title.textContent = data.titulo;
-    if(ui.description) ui.description.innerHTML = data.descripcion || "Sin descripción disponible."; 
+    if (ui.title) ui.title.textContent = data.titulo;
+    if (ui.description) ui.description.innerHTML = data.descripcion || "Sin descripción disponible.";
 
-    // B. Precios (Uso de utils global)
-    if(ui.price) ui.price.textContent = window.utils.formatCurrency(data.precio);
-    
-    // Precio anterior (oferta)
-    if(ui.priceOld) {
-        if (data.precio_antes && data.precio_antes > data.precio) {
+    // B. Precios
+    if (ui.price) {
+        if (data.es_gratis) {
+            ui.price.textContent = "GRATIS";
+            ui.price.classList.add("text-emerald-600");
+            ui.price.classList.remove("text-slate-900");
+        } else {
+            ui.price.textContent = window.utils.formatCurrency(data.precio);
+            ui.price.classList.remove("text-emerald-600");
+            ui.price.classList.add("text-slate-900");
+        }
+    }
+
+    // Precio anterior (oferta) - Solo si no es gratis
+    if (ui.priceOld) {
+        if (!data.es_gratis && data.precio_antes && data.precio_antes > data.precio) {
             ui.priceOld.textContent = window.utils.formatCurrency(data.precio_antes);
             ui.priceOld.classList.remove('hidden');
         } else {
@@ -120,15 +133,15 @@ function renderProduct(data) {
 
     // C. Imagen Principal con Fix de Race Condition
     if (ui.image) {
-        const imgUrl = (data.imagenes_preview && data.imagenes_preview.length > 0) 
-            ? data.imagenes_preview[0] 
+        const imgUrl = (data.imagenes_preview && data.imagenes_preview.length > 0)
+            ? data.imagenes_preview[0]
             : 'https://via.placeholder.com/600x400?text=No+Image';
 
         ui.image.src = imgUrl;
 
         // Función para ocultar skeleton
         const imageLoaded = () => {
-            if(ui.imageSkeleton) ui.imageSkeleton.classList.add('hidden');
+            if (ui.imageSkeleton) ui.imageSkeleton.classList.add('hidden');
             ui.image.classList.remove('opacity-0');
         };
 
@@ -137,7 +150,7 @@ function renderProduct(data) {
         } else {
             ui.image.onload = imageLoaded;
             ui.image.onerror = () => {
-                ui.image.src = 'assets/img/placeholder-error.png'; 
+                ui.image.src = 'assets/img/placeholder-error.png';
                 imageLoaded();
             };
         }
@@ -147,64 +160,143 @@ function renderProduct(data) {
     const teacherName = data.creador_nombre || data.autor || "English To Go";
     const teacherPhoto = data.creador_foto || "https://i.imgur.com/O1F7GGy.png";
 
-    if(ui.teacherName) ui.teacherName.textContent = teacherName;
-    if(ui.teacherPhoto) ui.teacherPhoto.src = teacherPhoto;
+    if (ui.teacherName) ui.teacherName.textContent = teacherName;
+    if (ui.teacherPhoto) ui.teacherPhoto.src = teacherPhoto;
 
     // E. Metadatos
     const arrayToString = (arr) => Array.isArray(arr) ? arr.join(", ") : (arr || "General");
 
-    if(ui.metaLevel) ui.metaLevel.textContent = arrayToString(data.levels);
-    if(ui.metaSkill) ui.metaSkill.textContent = arrayToString(data.skills);
-    if(ui.metaType) ui.metaType.textContent = arrayToString(data.types); 
-    if(ui.metaContext) ui.metaContext.textContent = arrayToString(data.context);
+    if (ui.metaLevel) ui.metaLevel.textContent = arrayToString(data.levels);
+    if (ui.metaSkill) ui.metaSkill.textContent = arrayToString(data.skills);
+    if (ui.metaType) ui.metaType.textContent = arrayToString(data.types);
+    if (ui.metaContext) ui.metaContext.textContent = arrayToString(data.context);
 
     // F. Badges / Etiquetas Visuales
-    if (ui.badgesContainer && Array.isArray(data.levels)) {
-        ui.badgesContainer.innerHTML = data.levels.map(lvl => 
-            `<span class="inline-block bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded-md font-semibold border border-indigo-100 mr-2 mb-2">
-                ${lvl.split('(')[0]}
-            </span>`
-        ).join('');
+    if (ui.badgesContainer) {
+        let badgesHtml = '';
+
+        // Badge GRATIS
+        if (data.es_gratis) {
+            badgesHtml += `<span class="inline-block bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-3 py-1.5 rounded-md font-black shadow-md mr-2 mb-2 tracking-wide transform hover:scale-105 transition-transform"><i class="fa-solid fa-gift mr-1"></i> GRATIS</span>`;
+        }
+
+        if (Array.isArray(data.levels)) {
+            badgesHtml += data.levels.map(lvl =>
+                `<span class="inline-block bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded-md font-semibold border border-indigo-100 mr-2 mb-2">
+                    ${lvl.split('(')[0]}
+                </span>`
+            ).join('');
+        }
+
+        ui.badgesContainer.innerHTML = badgesHtml;
     }
 
-    // G. LOGICA DE AÑADIR AL CARRITO (Conexión con cart.js)
+    // G. LOGICA DE AÑADIR AL CARRITO / DESCARGAR
     if (ui.btnAddToCart) {
-        // Limpiamos listeners previos (aunque en MPA no es estrictamente necesario, es buena práctica)
-        ui.btnAddToCart.onclick = async (e) => {
-            e.preventDefault(); // Prevenir comportamientos por defecto si es link o form
+        // CASO GRATIS
+        if (data.es_gratis) {
+            // Estilo
+            ui.btnAddToCart.className = "w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-emerald-500/30 flex items-center justify-center gap-3 group active:scale-95";
+            ui.btnAddToCart.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-lg group-hover:animate-bounce"></i><span>Descargar Ahora</span>';
 
-            // 1. Verificación de Seguridad
-            if (typeof window.addToCart !== 'function') {
-                console.error("FATAL: cart.js no está cargado. window.addToCart es undefined.");
-                alert("Error técnico: El sistema de carrito no está disponible.");
-                return;
-            }
+            // Acción
+            ui.btnAddToCart.onclick = (e) => handleFreeDownload(data, ui.btnAddToCart);
 
-            // 2. Feedback de UX (Loading State)
-            const originalContent = ui.btnAddToCart.innerHTML;
-            ui.btnAddToCart.disabled = true;
-            ui.btnAddToCart.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Agregando...';
-            ui.btnAddToCart.classList.add('opacity-75', 'cursor-not-allowed');
+        } else {
+            // CASO PAGO (Logica original)
+            ui.btnAddToCart.onclick = async (e) => {
+                e.preventDefault();
 
-            try {
-                // 3. Invocar lógica global del carrito
-                // Nota: window.addToCart en cart.js es async, maneja auth y Firestore
-                await window.addToCart(data);
+                // 1. Verificación de Seguridad
+                if (typeof window.addToCart !== 'function') {
+                    console.error("FATAL: cart.js no está cargado. window.addToCart es undefined.");
+                    alert("Error técnico: El sistema de carrito no está disponible.");
+                    return;
+                }
 
-            } catch (error) {
-                console.error("Error al procesar click de compra:", error);
-                // Opcional: Mostrar toast de error aquí si cart.js no lo hace
-            } finally {
-                // 4. Restaurar estado (pequeño delay para que el usuario note la acción)
-                setTimeout(() => {
-                    if (ui.btnAddToCart) { // Check de seguridad por si el usuario cambió de página rápido
-                        ui.btnAddToCart.disabled = false;
-                        ui.btnAddToCart.innerHTML = originalContent;
-                        ui.btnAddToCart.classList.remove('opacity-75', 'cursor-not-allowed');
-                    }
-                }, 600);
-            }
+                // 2. Feedback de UX (Loading State)
+                const originalContent = ui.btnAddToCart.innerHTML;
+                ui.btnAddToCart.disabled = true;
+                ui.btnAddToCart.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Agregando...';
+                ui.btnAddToCart.classList.add('opacity-75', 'cursor-not-allowed');
+
+                try {
+                    await window.addToCart(data);
+                } catch (error) {
+                    console.error("Error al procesar click de compra:", error);
+                } finally {
+                    setTimeout(() => {
+                        if (ui.btnAddToCart) {
+                            ui.btnAddToCart.disabled = false;
+                            ui.btnAddToCart.innerHTML = originalContent;
+                            ui.btnAddToCart.classList.remove('opacity-75', 'cursor-not-allowed');
+                        }
+                    }, 600);
+                }
+            };
+        }
+    }
+}
+
+/**
+ * PROCESO DE DESCARGA DIRECTA (Solo Gratuitos)
+ */
+async function handleFreeDownload(product, btnElement) {
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert("Para descargar materiales gratuitos, por favor inicia sesión o regístrate.");
+        sessionStorage.setItem('redirect_after_login', window.location.href);
+        window.location.href = './auth/login.html';
+        return;
+    }
+
+    // UI Loading
+    const originalText = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
+
+    try {
+        // Crear orden "completed" directamente
+        const orderData = {
+            user_id: user.uid,
+            user_email: user.email,
+            user_name: user.displayName || "Usuario",
+            items: [{
+                id: product.id,
+                titulo: product.titulo,
+                precio: 0,
+                imagen: (product.imagenes_preview && product.imagenes_preview.length) ? product.imagenes_preview[0] : null,
+                tipo: product.tipo_archivo || 'Digital',
+                autor_id: product.creador_uid || product.autor_id || 'unknown'
+            }],
+            original_total: 0,
+            discount_amount: 0,
+            final_total: 0,
+            currency: 'COP',
+            status: 'completed',
+            payment_method: 'free_download',
+            created_at: serverTimestamp(),
+            platform: 'web_product_detail_direct'
         };
+
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+        console.log("Descarga registrada con ID:", docRef.id);
+
+        // Éxito visual
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
+        btnElement.classList.replace('bg-emerald-600', 'bg-slate-800');
+
+        setTimeout(() => {
+            alert("¡Material añadido a tu biblioteca!");
+            window.location.href = './panel/biblioteca.html';
+        }, 800);
+
+    } catch (error) {
+        console.error("Error procesando descarga:", error);
+        alert("Hubo un error al procesar la descarga. Intenta nuevamente.");
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalText;
     }
 }
 
@@ -219,9 +311,9 @@ async function loadRelatedProducts(currentProduct) {
         const productsRef = collection(db, "products");
 
         if (currentProduct.levels && currentProduct.levels.length > 0) {
-            const targetLevel = currentProduct.levels[0]; 
+            const targetLevel = currentProduct.levels[0];
             q = query(
-                productsRef, 
+                productsRef,
                 where("levels", "array-contains", targetLevel),
                 limit(6)
             );
@@ -230,7 +322,7 @@ async function loadRelatedProducts(currentProduct) {
         }
 
         const querySnapshot = await getDocs(q);
-        
+
         const related = querySnapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(p => p.id !== currentProduct.id)
@@ -240,7 +332,7 @@ async function loadRelatedProducts(currentProduct) {
 
     } catch (e) {
         console.error("Error cargando relacionados:", e);
-        ui.relatedGrid.innerHTML = ''; 
+        ui.relatedGrid.innerHTML = '';
     }
 }
 
@@ -253,14 +345,14 @@ function renderRelatedGrid(products) {
     }
 
     products.forEach(p => {
-        const meta = getFileMeta(p.tipo_archivo); 
+        const meta = getFileMeta(p.tipo_archivo);
         const price = window.utils.formatCurrency(p.precio);
         const teacherName = p.creador_nombre || p.autor || "English To Go";
 
         const card = document.createElement('a');
         card.href = `producto.html?id=${p.id}`;
         card.className = "group block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-slate-100";
-        
+
         const imgHTML = (p.imagenes_preview && p.imagenes_preview.length)
             ? `<img src="${p.imagenes_preview[0]}" class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-500">`
             : `<div class="w-full h-32 bg-slate-50 flex items-center justify-center text-slate-300 text-3xl">${meta.icon}</div>`;

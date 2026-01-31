@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Ayuda | English To Go Materials</title>
+    <link rel="icon" href="./assets/img/favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+
+
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen pt-[74px]">
+
+    <app-header no-sidebar="true"></app-header>
+
+    <main class="flex-grow">
+
+        <div class="max-w-5xl mx-auto px-6 py-12 md:py-20">
+
+            <div class="text-center mb-16">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-2 block">Soporte
+                    Corporativo</span>
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">¿Dudas, sugerencias o problemas?</h1>
+                <p class="text-slate-500 text-lg max-w-2xl mx-auto">Estamos aquí para asegurar que tu experiencia sea
+                    impecable.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+
+                <!-- Columna Izquierda: Formulario -->
+                <div class="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-900 mb-6">Envíanos un mensaje</h2>
+
+                    <form
+                        onsubmit="event.preventDefault(); alert('Gracias por contactarnos. El equipo de soporte revisará su solicitud.');"
+                        class="space-y-5">
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nombre
+                                    Completo</label>
+                                <input type="text"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                                    placeholder="Su nombre">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Correo
+                                    Electrónico</label>
+                                <input type="email"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                                    placeholder="nombre@empresa.com">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Asunto</label>
+                            <div class="relative">
+                                <select
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Seleccione el motivo...</option>
+                                    <option value="buy_issue">Soy Comprador: Problema con una descarga</option>
+                                    <option value="sell_issue">Soy Vendedor: Duda sobre mis pagos/cuenta</option>
+                                    <option value="suggestion">Sugerencia general</option>
+                                    <option value="bug_report">Reportar un error en la web</option>
+                                </select>
+                                <div
+                                    class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Mensaje</label>
+                            <textarea rows="4"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none"
+                                placeholder="Describa su situación detalladamente..."></textarea>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200">
+                            Enviar Solicitud
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Columna Derecha: Info Directa + FAQ -->
+                <div class="space-y-8">
+
+                    <!-- Info Card -->
+                    <div
+                        class="bg-indigo-600 rounded-3xl p-8 text-white shadow-lg shadow-indigo-500/30 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl">
+                        </div>
+                        <div class="relative z-10">
+                            <h3 class="text-xl font-bold mb-4">Contacto Directo</h3>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <a href="mailto:hola.englishtogo@gmail.com"
+                                    class="font-bold text-lg hover:underline transition-all">hola.englishtogo@gmail.com</a>
+                            </div>
+                            <div class="flex items-center gap-2 text-indigo-200 text-sm font-medium">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>Respondemos en menos de 24 horas hábiles.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ -->
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-question text-slate-400"></i> Preguntas Frecuentes
+                        </h3>
+
+                        <div class="space-y-4">
+                            <!-- Q1 -->
+                            <details
+                                class="group bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer">
+                                <summary
+                                    class="flex items-center justify-between p-4 font-bold text-slate-700 group-open:text-indigo-600 transition-colors">
+                                    ¿Cómo descargo mi material después de comprar?
+                                    <i
+                                        class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                                </summary>
+                                <div
+                                    class="px-4 pb-4 text-slate-500 text-sm leading-relaxed border-t border-slate-50 pt-3">
+                                    Una vez completada la compra, recibirás un correo electrónico inmediato con el
+                                    enlace de descarga. También puedes acceder a todos tus materiales desde la sección
+                                    "Mi Biblioteca" en tu panel de usuario.
+                                </div>
+                            </details>
+
+                            <!-- Q2 -->
+                            <details
+                                class="group bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer">
+                                <summary
+                                    class="flex items-center justify-between p-4 font-bold text-slate-700 group-open:text-indigo-600 transition-colors">
+                                    ¿Puedo vender mis propios materiales?
+                                    <i
+                                        class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                                </summary>
+                                <div
+                                    class="px-4 pb-4 text-slate-500 text-sm leading-relaxed border-t border-slate-50 pt-3">
+                                    ¡Por supuesto! English To Go es un marketplace abierto. Regístrate, solicita tu
+                                    perfil de vendedor y comienza a publicar tus recursos. Ofrecemos comisiones
+                                    competitivas y una audiencia global.
+                                </div>
+                            </details>
+
+                            <!-- Q3 -->
+                            <details
+                                class="group bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer">
+                                <summary
+                                    class="flex items-center justify-between p-4 font-bold text-slate-700 group-open:text-indigo-600 transition-colors">
+                                    ¿Los materiales tienen garantía?
+                                    <i
+                                        class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                                </summary>
+                                <div
+                                    class="px-4 pb-4 text-slate-500 text-sm leading-relaxed border-t border-slate-50 pt-3">
+                                    Garantizamos la accesibilidad técnica de los archivos. Si un archivo está dañado, lo
+                                    reemplazaremos inmediatamente. Debido a la naturaleza digital de los productos, no
+                                    ofrecemos reembolsos directos salvo excepciones técnicas verificadas.
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Cart Drawer Component -->
+    <app-cart-drawer></app-cart-drawer>
+
+    <!-- Scripts -->
+    <script type="module" src="./assets/js/firebase-app.js"></script>
+    <script type="module" src="./assets/js/utils.js"></script>
+    <script type="module" src="./assets/js/components.js"></script>
+    <script type="module" src="./js/cart.js"></script>
+
+</body>
+
+</html>

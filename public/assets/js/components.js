@@ -54,7 +54,7 @@ class AppHeader extends HTMLElement {
                 </button>
 
                 <a href="${basePath}/index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="https://i.imgur.com/O1F7GGy.png" alt="Logo" class="w-10 h-10 rounded-full border border-slate-200 shadow-sm">
+                    <img src="${basePath}/assets/img/logo.png" alt="Logo" class="w-10 h-10 rounded-full border border-slate-200 shadow-sm">
                     <span class="font-bold text-slate-800 tracking-tight text-xl hidden sm:block">
                         English To Go <span class="text-indigo-600">Materials</span>
                     </span>
@@ -94,6 +94,10 @@ class AppHeader extends HTMLElement {
                         <div class="px-4 py-2 border-b border-slate-50 mb-1">
                             <p class="text-xs text-slate-400 uppercase font-bold">Navegación</p> 
                         </div>
+
+                        <a href="${basePath}/panel/perfil.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">
+                            <i class="fa-solid fa-user w-6"></i> Mi Perfil
+                        </a>
                         
                         <a href="${basePath}/catalogo.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">
                             <i class="fa-solid fa-magnifying-glass w-6"></i> Explorar Catálogo
@@ -314,13 +318,53 @@ class AppCartDrawer extends HTMLElement {
                 </div>
 
                 <div class="p-5 border-t border-slate-100 bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.03)] z-20">
+                    
+                    <!-- Sección Cupón -->
+                    <div id="couponSection" class="mb-4 pb-4 border-b border-slate-100">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-ticket text-indigo-500 text-sm"></i>
+                            <span class="text-xs font-bold text-slate-600">¿Tienes un cupón?</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="couponInput" placeholder="Ej: ESTUDIANTE2024" 
+                                   class="flex-grow px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all uppercase font-medium text-slate-700 placeholder:normal-case placeholder:font-normal">
+                            <button id="btnApplyCoupon" class="px-4 py-2 bg-indigo-50 text-indigo-600 text-sm font-bold rounded-lg hover:bg-indigo-100 transition-all border border-indigo-200 whitespace-nowrap">
+                                Aplicar
+                            </button>
+                        </div>
+                        <!-- Estado del cupón (dinámico) -->
+                        <div id="couponStatus" class="hidden mt-2 text-xs font-medium p-2 rounded-lg"></div>
+                    </div>
+                    
+                    <!-- Resumen de Descuento (visible solo si hay cupón) -->
+                    <div id="discountSummary" class="hidden mb-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Subtotal</span>
+                            <span id="subtotalDisplay" class="font-medium text-slate-700">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm mt-1">
+                            <span class="text-emerald-600 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-tag"></i> Descuento
+                            </span>
+                            <span id="discountDisplay" class="font-bold text-emerald-600">-$0</span>
+                        </div>
+                    </div>
+
                     <div class="flex justify-between items-end mb-4">
                         <span class="text-sm font-medium text-slate-500">Total a pagar</span>
                         <span id="cartTotalDisplay" class="text-2xl font-black text-slate-900 tracking-tight">$0</span>
                     </div>
+                    
+                    <!-- Botón Checkout (se transforma según el total) -->
                     <button id="btnCheckout" class="w-full py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200 active:scale-95 flex items-center justify-center gap-2">
                         <span>Finalizar Compra</span>
                         <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    
+                    <!-- Botón alternativo para costo cero (oculto por defecto) -->
+                    <button id="btnRedeemAccess" class="hidden w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-200 active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-gift"></i>
+                        <span>Canjear Acceso Ahora</span>
                     </button>
                 </div>
             </div>
@@ -334,11 +378,78 @@ class AppCartDrawer extends HTMLElement {
 class AppFooter extends HTMLElement {
     connectedCallback() {
         const year = new Date().getFullYear();
+
+        // Rutas relativas para links del footer
+        const isRoot = !window.location.pathname.includes('/panel/') && !window.location.pathname.includes('/auth/');
+        const basePath = isRoot ? '.' : '..';
+
         this.innerHTML = `
-        <footer class="w-full py-6 text-center border-t border-slate-100 mt-auto bg-white/50 backdrop-blur-sm relative z-10">
-            <p class="text-slate-400 text-xs font-medium">
-                &copy; ${year} English To Go. Infraestructura Académica Digital.
-            </p>
+        <footer class="bg-white border-t border-slate-200 mt-auto pt-16 pb-8">
+            <div class="max-w-7xl mx-auto px-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                    
+                    <!-- Columna Brand -->
+                    <div class="lg:col-span-1">
+                        <a href="${basePath}/index.html" class="flex items-center gap-3 mb-6">
+                            <img src="${basePath}/assets/img/logo.png" alt="Logo" class="w-10 h-10 rounded-full border border-slate-200 opacity-80 hover:opacity-100 transition-all">
+                            <span class="font-bold text-slate-800 tracking-tight text-lg">
+                                English To Go
+                            </span>
+                        </a>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-6">
+                            Infraestructura académica digital para la enseñanza del inglés. Conectando excelencia pedagógica con tecnología global.
+                        </p>
+                        <div class="flex gap-4">
+                            <a href="#" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all"><i class="fa-brands fa-linkedin-in text-xs"></i></a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all"><i class="fa-brands fa-twitter text-xs"></i></a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all"><i class="fa-brands fa-instagram text-xs"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Columna Empresa -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">Empresa</h4>
+                        <ul class="space-y-4 text-sm text-slate-500 font-medium">
+                            <li><a href="${basePath}/nosotros.html" class="hover:text-indigo-600 transition-colors">Quiénes Somos</a></li>
+                            <li><a href="${basePath}/nosotros.html" class="hover:text-indigo-600 transition-colors">Misión y Visión</a></li>
+                            <li><a href="${basePath}/contacto.html" class="hover:text-indigo-600 transition-colors">Trabaja con Nosotros</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Columna Soporte -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">Ayuda & Soporte</h4>
+                        <ul class="space-y-4 text-sm text-slate-500 font-medium">
+                            <li><a href="${basePath}/contacto.html" class="hover:text-indigo-600 transition-colors">Centro de Ayuda</a></li>
+                            <li><a href="${basePath}/contacto.html" class="hover:text-indigo-600 transition-colors">Reportar un Problema</a></li>
+                            <li><a href="${basePath}/contacto.html" class="hover:text-indigo-600 transition-colors">Estado del Servicio</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Columna Legal -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-6 text-sm uppercase tracking-wider">Legal</h4>
+                        <ul class="space-y-4 text-sm text-slate-500 font-medium">
+                            <li><a href="#" class="hover:text-indigo-600 transition-colors">Términos de Uso</a></li>
+                            <li><a href="#" class="hover:text-indigo-600 transition-colors">Privacidad de Datos</a></li>
+                            <li><a href="#" class="hover:text-indigo-600 transition-colors">Cookies</a></li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="border-t border-slate-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-slate-400 text-xs font-medium">
+                        &copy; ${year} English To Go Group. Todos los derechos reservados.
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistemas Operativos</span>
+                    </div>
+                </div>
+
+            </div>
         </footer>
         `;
     }

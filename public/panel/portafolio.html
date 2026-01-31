@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Portafolio | English To Go Materials</title>
+
+    <link rel="icon" href="../assets/img/favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#06b6d4',
+                        accent: '#10b981',
+                        danger: '#ef4444',
+                        slate: {
+                            50: '#f8fafc',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../assets/css/variables.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/responsive.css">
+
+    <style>
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+        }
+
+        /* --- Modal Image Carousel Styles --- */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0f172a;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+        }
+
+        .carousel-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Navigation Arrows */
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .carousel-container:hover .carousel-nav {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .carousel-nav:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .carousel-nav:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .carousel-nav.prev {
+            left: 16px;
+        }
+
+        .carousel-nav.next {
+            right: 16px;
+        }
+
+        .carousel-nav i {
+            color: #1e293b;
+            font-size: 20px;
+        }
+
+        /* Indicators/Dots */
+        .carousel-indicators {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .carousel-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+
+        .carousel-indicator:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: scale(1.2);
+        }
+
+        .carousel-indicator.active {
+            background: white;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* Mobile Touch Optimizations */
+        @media (max-width: 768px) {
+            .carousel-nav {
+                width: 40px;
+                height: 40px;
+                opacity: 0.8;
+                pointer-events: auto;
+            }
+
+            .carousel-nav.prev {
+                left: 8px;
+            }
+
+            .carousel-nav.next {
+                right: 8px;
+            }
+
+            .carousel-indicators {
+                bottom: 12px;
+            }
+        }
+
+        /* Image Counter Badge */
+        .carousel-counter {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+
+    <script type="module" src="../assets/js/components.js"></script>
+
+    <script type="module" src="./js/guard.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <div class="blob-indigo fixed top-0 left-0 opacity-40 pointer-events-none -z-10"></div>
+    <div class="blob-cyan fixed bottom-0 right-0 opacity-40 pointer-events-none -z-10"></div>
+
+    <app-header class="sticky top-0 z-50" no-sidebar="true" no-cart="true"></app-header>
+
+    <div class="flex flex-col min-h-screen pt-[74px]">
+
+        <main class="flex-1 p-4 md:p-6 w-full max-w-[1280px] mx-auto animate-fade-in">
+
+            <!-- Encabezado de la página -->
+            <div class="mb-8 mt-2 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">
+                        Mi <span class="text-gradient">Portafolio</span> 📊
+                    </h1>
+                    <p class="text-slate-500 font-medium text-lg">
+                        Gestiona tus materiales y revisa tu rendimiento de ventas.
+                    </p>
+                </div>
+
+                <a href="publicacion.html" class="btn btn-primary shrink-0">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nuevo Material</span>
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-10">
+                <!-- Ingresos Totales -->
+                <div class="stat-card rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div
+                            class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-coins text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Ingresos Totales</p>
+                            <p id="statIncome" class="text-3xl font-black text-slate-900 tracking-tight">$ 0 COP</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">Ganancias acumuladas de todas tus ventas.</p>
+                </div>
+
+                <!-- Ventas Realizadas -->
+                <div class="stat-card rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div
+                            class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-chart-simple text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Ventas Realizadas</p>
+                            <p id="statSales" class="text-3xl font-black text-slate-900 tracking-tight">0</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">Cantidad total de productos vendidos.</p>
+                </div>
+
+                <!-- Productos Activos -->
+                <div class="stat-card rounded-2xl border border-slate-200/50 p-6 shadow-lg">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div
+                            class="w-14 h-14 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-layer-group text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Productos Activos</p>
+                            <p id="statProducts" class="text-3xl font-black text-slate-900 tracking-tight">0</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">Materiales publicados y disponibles.</p>
+                </div>
+            </div>
+
+            <!-- Inventario de Materiales -->
+            <section>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-900">
+                        <i class="fa-solid fa-boxes-stacked text-primary mr-2"></i> Inventario de Materiales
+                    </h2>
+
+                    <!-- View Toggles -->
+                    <div class="flex bg-slate-100/80 p-1 rounded-xl gap-1">
+                        <button id="btnViewList"
+                            class="p-2 w-10 h-10 rounded-lg bg-white shadow-sm text-slate-800 transition-all hover:text-primary"
+                            title="Vista Lista">
+                            <i class="fa-solid fa-list"></i>
+                        </button>
+                        <button id="btnViewGrid"
+                            class="p-2 w-10 h-10 rounded-lg text-slate-400 hover:bg-white hover:shadow-sm hover:text-slate-800 transition-all"
+                            title="Vista Cuadrícula">
+                            <i class="fa-solid fa-grip"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-16">
+                    <i class="fa-solid fa-spinner-third fa-spin text-4xl text-primary mb-4"></i>
+                    <p class="text-slate-400 font-medium">Cargando tus materiales...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState"
+                    class="hidden text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-2">Aún no tienes materiales</h3>
+                    <p class="text-sm text-slate-400 mb-6 max-w-xs mx-auto">Comienza a crear y vender tus recursos
+                        educativos.</p>
+                    <a href="publicacion.html" class="btn btn-primary inline-flex">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Crear mi primer material</span>
+                    </a>
+                </div>
+
+                <!-- Inventory Grid -->
+                <div id="inventoryGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards will be injected here by JS -->
+                </div>
+            </section>
+
+        </main>
+        <app-footer></app-footer>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-[100] hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0"
+            id="deleteModalBackdrop"></div>
+        <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform scale-95 opacity-0 transition-all"
+                id="deleteModalPanel">
+                <div class="text-center">
+                    <div
+                        class="w-16 h-16 bg-red-100 text-danger rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-trash-can text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 mb-2">¿Eliminar Material?</h3>
+                    <p id="deleteModalMsg" class="text-sm text-slate-500 mb-6">Esta acción no se puede deshacer. El
+                        material dejará de estar disponible en el catálogo.</p>
+                    <div class="flex gap-3">
+                        <button id="btnCancelDelete"
+                            class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all">
+                            Cancelar
+                        </button>
+                        <button id="btnConfirmDelete"
+                            class="flex-1 py-3 bg-danger text-white font-bold rounded-xl hover:bg-red-600 transition-all shadow-lg shadow-red-200 active:scale-95">
+                            Sí, Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALLES DE PRODUCTO -->
+    <div id="productModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity opacity-0"
+            id="productModalBackdrop"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-0 text-center sm:p-4">
+
+                <!-- Modal Panel (Mobile Optimized) -->
+                <div class="relative transform overflow-hidden bg-white text-left shadow-2xl transition-all w-full sm:max-w-4xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 flex flex-col h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-2xl mt-auto sm:mt-0"
+                    id="productModalPanel">
+
+                    <!-- Botón Cerrar Flotante -->
+                    <button id="btnCloseModal"
+                        class="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-md h-10 w-10 flex items-center justify-center rounded-full text-slate-500 hover:text-red-500 transition-colors shadow-lg border border-white/50">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+
+                    <div class="flex flex-col md:flex-row h-full overflow-hidden">
+
+                        <!-- 1. Columna Visual (Galería) -->
+                        <div class="w-full md:w-1/2 bg-slate-100 relative group flex-shrink-0 h-[35vh] md:h-auto overflow-hidden"
+                            id="modalGalleryContainer">
+                            <!-- JS inyectará las imágenes aquí -->
+                        </div>
+
+                        <!-- 2. Columna Info (Scrollable en móvil) -->
+                        <div class="w-full md:w-1/2 flex flex-col bg-white min-h-0 flex-1">
+
+                            <!-- Header Info (Scrollable Content) -->
+                            <div class="flex-grow overflow-y-auto custom-scroll p-6 md:p-8">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span id="modalLevelTag"
+                                        class="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">B1
+                                        Intermediate</span>
+                                </div>
+
+                                <h2 id="modalTitle"
+                                    class="text-2xl md:text-3xl font-black text-slate-900 leading-tight mb-4 text-balance">
+                                    Título del Material
+                                </h2>
+
+                                <div class="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
+                                    <img id="modalTeacherImg" src="" class="w-10 h-10 rounded-full bg-slate-200">
+                                    <div>
+                                        <p class="text-xs text-slate-400 font-bold uppercase">Creado por</p>
+                                        <p id="modalTeacherName" class="text-sm font-bold text-slate-700">Nombre
+                                            Profesor</p>
+                                    </div>
+                                </div>
+
+                                <div class="prose prose-slate prose-sm text-slate-500 mb-6">
+                                    <p id="modalDesc">Descripción completa del material...</p>
+                                </div>
+
+                                <!-- Metadata Grid -->
+                                <div class="grid grid-cols-2 gap-4 text-xs">
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <span
+                                            class="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Habilidad</span>
+                                        <span id="modalSkill" class="font-bold text-slate-700">-</span>
+                                    </div>
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <span
+                                            class="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Gramática</span>
+                                        <span id="modalGrammar" class="font-bold text-slate-700">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Sticky Actions (Fixed on mobile) -->
+                            <div
+                                class="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white/95 backdrop-blur z-20 shadow-[0_-5px_30px_rgba(0,0,0,0.05)]">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span
+                                        class="text-xs font-bold text-slate-400 uppercase tracking-widest">Precio</span>
+                                    <span id="modalPrice"
+                                        class="text-3xl font-black text-slate-900 tracking-tight">$0</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-3">
+                                    <button id="modalBtnShare"
+                                        class="h-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 font-bold hover:text-cyan-600 hover:bg-cyan-50 transition-all border border-slate-100 gap-2">
+                                        <i class="fa-solid fa-share-nodes"></i> Compartir Material
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="../assets/js/firebase-app.js"></script>
+    <script type="module" src="../assets/js/utils.js"></script>
+    <script type="module" src="./js/portafolio.js"></script>
+
+</body>
+
+</html>
