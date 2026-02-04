@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -16,15 +17,39 @@
 
     <style>
         /* Ajuste visual para las pestañas activas/inactivas */
-        .tab-btn { position: relative; cursor: pointer; transition: all 0.3s ease; }
-        .tab-active { color: #4f46e5; font-weight: 700; background-color: rgba(255,255,255,0.8); }
-        .tab-active::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
-            background: linear-gradient(90deg, #4f46e5, #06b6d4);
-            border-top-left-radius: 4px; border-top-right-radius: 4px;
+        .tab-btn {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .tab-inactive { color: #64748b; font-weight: 500; }
-        .tab-inactive:hover { background-color: rgba(248,250,252, 0.8); color: #475569; }
+
+        .tab-active {
+            color: #4f46e5;
+            font-weight: 700;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #4f46e5, #06b6d4);
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        .tab-inactive {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .tab-inactive:hover {
+            background-color: rgba(248, 250, 252, 0.8);
+            color: #475569;
+        }
     </style>
 </head>
 
@@ -32,22 +57,30 @@
 
     <app-header no-sidebar="true" no-cart="true"></app-header>
 
-    <div class="blob-indigo absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-    <div class="blob-cyan absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+    <div
+        class="blob-indigo absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -z-10 pointer-events-none">
+    </div>
+    <div
+        class="blob-cyan absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl -z-10 pointer-events-none">
+    </div>
 
-    <main class="flex-grow min-h-screen pt-[90px] pb-12 px-4 flex flex-col items-center justify-center relative z-10 w-full">
-        
+    <main
+        class="flex-grow min-h-screen pt-[90px] pb-12 px-4 flex flex-col items-center justify-center relative z-10 w-full">
+
         <div class="w-full max-w-[440px] mx-auto animate-fade-in">
-            
-            <div class="card glass-panel overflow-hidden border-0 ring-1 ring-slate-900/5 shadow-2xl shadow-indigo-500/10">
-                
+
+            <div
+                class="card glass-panel overflow-hidden border-0 ring-1 ring-slate-900/5 shadow-2xl shadow-indigo-500/10">
+
                 <div class="h-1.5 w-full bg-gradient-to-r from-indigo-600 via-purple-500 to-cyan-500"></div>
 
                 <div id="auth-tabs" class="flex border-b border-slate-100 bg-slate-50/50">
-                    <div id="tab-login" class="flex-1 py-4 text-center text-sm tab-btn tab-active" onclick="switchTab('login')">
+                    <div id="tab-login" class="flex-1 py-4 text-center text-sm tab-btn tab-active"
+                        onclick="switchTab('login')">
                         INGRESAR
                     </div>
-                    <div id="tab-register" class="flex-1 py-4 text-center text-sm tab-btn tab-inactive" onclick="switchTab('register')">
+                    <div id="tab-register" class="flex-1 py-4 text-center text-sm tab-btn tab-inactive"
+                        onclick="switchTab('register')">
                         CREAR CUENTA
                     </div>
                 </div>
@@ -60,14 +93,18 @@
                             <p class="text-slate-500 text-xs font-medium mt-1">Accede a tu panel de materiales.</p>
                         </div>
 
-                        <button id="btn-google-login" type="button" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all border border-slate-200 shadow-sm hover:shadow-md mb-5 group">
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="G" class="group-hover:scale-110 transition-transform">
+                        <button id="btn-google-login" type="button"
+                            class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all border border-slate-200 shadow-sm hover:shadow-md mb-5 group">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"
+                                height="18" alt="G" class="group-hover:scale-110 transition-transform">
                             <span class="text-sm">Continuar con Google</span>
                         </button>
 
                         <div class="relative flex items-center mb-5">
                             <div class="flex-grow border-t border-slate-200"></div>
-                            <span class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold tracking-widest">O con correo</span>
+                            <span
+                                class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold tracking-widest">O
+                                con correo</span>
                             <div class="flex-grow border-t border-slate-200"></div>
                         </div>
 
@@ -75,8 +112,9 @@
                             <div class="space-y-1">
                                 <label class="label">Correo Electrónico</label>
                                 <div class="relative">
-                                    <i class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                                    <input type="email" id="login-email" placeholder="nombre@correo.com" required 
+                                    <i
+                                        class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+                                    <input type="email" id="login-email" placeholder="nombre@correo.com" required
                                         class="input-field pl-10">
                                 </div>
                             </div>
@@ -84,7 +122,8 @@
                             <div class="space-y-1">
                                 <div class="flex justify-between items-center px-1">
                                     <label class="label mb-0">Contraseña</label>
-                                    <button type="button" onclick="switchView('recovery')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                    <button type="button" onclick="switchView('recovery')"
+                                        class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
                                         ¿Olvidaste la contraseña?
                                     </button>
                                 </div>
@@ -95,7 +134,8 @@
                                 </div>
                             </div>
 
-                            <button type="submit" id="btn-submit-login" class="btn btn-primary w-full justify-center mt-2 shadow-lg shadow-indigo-500/20">
+                            <button type="submit" id="btn-submit-login"
+                                class="btn btn-primary w-full justify-center mt-2 shadow-lg shadow-indigo-500/20">
                                 <span>Ingresar</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
@@ -105,17 +145,22 @@
                     <div id="view-register" class="hidden animate-fade-in">
                         <div class="text-center mb-6">
                             <h1 class="text-2xl font-black text-slate-800 tracking-tight">Crea tu cuenta</h1>
-                            <p class="text-slate-500 text-xs font-medium mt-1">Únete a la comunidad de English To Go.</p>
+                            <p class="text-slate-500 text-xs font-medium mt-1">Únete a la comunidad de English To Go.
+                            </p>
                         </div>
 
-                        <button id="btn-google-register" type="button" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all border border-slate-200 shadow-sm hover:shadow-md mb-5 group">
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="G" class="group-hover:scale-110 transition-transform">
+                        <button id="btn-google-register" type="button"
+                            class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all border border-slate-200 shadow-sm hover:shadow-md mb-5 group">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"
+                                height="18" alt="G" class="group-hover:scale-110 transition-transform">
                             <span class="text-sm">Registrarse con Google</span>
                         </button>
 
                         <div class="relative flex items-center mb-5">
                             <div class="flex-grow border-t border-slate-200"></div>
-                            <span class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold tracking-widest">O llena tus datos</span>
+                            <span
+                                class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold tracking-widest">O
+                                llena tus datos</span>
                             <div class="flex-grow border-t border-slate-200"></div>
                         </div>
 
@@ -124,7 +169,7 @@
                                 <label class="label">Nombre Completo</label>
                                 <div class="relative">
                                     <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                                    <input type="text" id="reg-name" placeholder="Ej: Oscar Duarte" required 
+                                    <input type="text" id="reg-name" placeholder="Ej: Oscar Duarte" required
                                         class="input-field pl-10">
                                 </div>
                             </div>
@@ -132,8 +177,9 @@
                             <div class="space-y-1">
                                 <label class="label">Correo Electrónico</label>
                                 <div class="relative">
-                                    <i class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                                    <input type="email" id="reg-email" placeholder="tu@email.com" required 
+                                    <i
+                                        class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+                                    <input type="email" id="reg-email" placeholder="tu@email.com" required
                                         class="input-field pl-10">
                                 </div>
                             </div>
@@ -142,43 +188,48 @@
                                 <label class="label">Contraseña</label>
                                 <div class="relative">
                                     <i class="fa-solid fa-lock absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                                    <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" required minlength="6"
-                                        class="input-field pl-10">
+                                    <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" required
+                                        minlength="6" class="input-field pl-10">
                                 </div>
                             </div>
 
-                            <button type="submit" id="btn-submit-register" class="btn btn-primary w-full justify-center mt-4">
+                            <button type="submit" id="btn-submit-register"
+                                class="btn btn-primary w-full justify-center mt-4">
                                 <span>Crear mi Cuenta</span>
                             </button>
                         </form>
                     </div>
 
                     <div id="view-recovery" class="hidden animate-fade-in text-center">
-                        <button onclick="switchView('login')" class="mb-6 flex items-center gap-2 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-wider transition-colors mx-auto">
+                        <button onclick="switchView('login')"
+                            class="mb-6 flex items-center gap-2 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-wider transition-colors mx-auto">
                             <i class="fa-solid fa-arrow-left"></i> Volver al ingreso
                         </button>
-                        
-                        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 rotate-3">
+
+                        <div
+                            class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 rotate-3">
                             <i class="fa-solid fa-key text-xl"></i>
                         </div>
-                        
+
                         <h2 class="text-xl font-black text-slate-800 mb-2">Recuperar Acceso</h2>
                         <p class="text-slate-500 text-xs mb-6">Ingresa tu correo y te enviaremos un enlace mágico.</p>
 
                         <form id="form-recovery" class="space-y-4 text-left">
                             <div class="relative">
                                 <i class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                                <input type="email" id="rec-email" placeholder="ejemplo@correo.com" required 
+                                <input type="email" id="rec-email" placeholder="ejemplo@correo.com" required
                                     class="input-field pl-10">
                             </div>
-                            
-                            <button type="submit" id="btn-submit-recovery" class="btn btn-primary w-full justify-center">
+
+                            <button type="submit" id="btn-submit-recovery"
+                                class="btn btn-primary w-full justify-center">
                                 Enviar Enlace
                             </button>
                         </form>
                     </div>
 
-                    <div id="feedback-msg" class="hidden mt-4 p-3 rounded-lg text-xs font-bold text-center flex items-center justify-center gap-2 animate-fade-in">
+                    <div id="feedback-msg"
+                        class="hidden mt-4 p-3 rounded-lg text-xs font-bold text-center flex items-center justify-center gap-2 animate-fade-in">
                         <i id="feedback-icon" class="fa-solid"></i>
                         <span id="feedback-text"></span>
                     </div>
@@ -187,7 +238,8 @@
 
                 <div class="bg-slate-50/80 px-8 py-4 border-t border-slate-100 text-center backdrop-blur-sm">
                     <p class="text-[10px] text-slate-400 font-medium">
-                        Al continuar, aceptas nuestros <a href="#" class="underline hover:text-indigo-600">Términos y Condiciones</a>.
+                        Al continuar, aceptas nuestros <a href="#" class="underline hover:text-indigo-600">Términos y
+                            Condiciones</a>.
                     </p>
                 </div>
 
@@ -223,7 +275,7 @@
                 views.login.classList.remove('hidden');
                 views.register.classList.add('hidden');
                 views.recovery.classList.add('hidden');
-                
+
                 tabs.login.classList.add('tab-active');
                 tabs.login.classList.remove('tab-inactive');
                 tabs.register.classList.remove('tab-active');
@@ -244,8 +296,8 @@
             hideFeedback();
             // Ocultar todas
             Object.values(views).forEach(el => el.classList.add('hidden'));
-            
-            if(viewName === 'recovery') {
+
+            if (viewName === 'recovery') {
                 views.recovery.classList.remove('hidden');
                 tabs.container.classList.add('hidden'); // Ocultar tabs en recovery
             } else if (viewName === 'login') {
@@ -260,7 +312,7 @@
             const text = document.getElementById('feedback-text');
 
             el.classList.remove('hidden', 'bg-red-50', 'text-red-600', 'border-red-100', 'bg-emerald-50', 'text-emerald-600', 'border-emerald-100');
-            
+
             if (type === 'error') {
                 el.classList.add('bg-red-50', 'text-red-600', 'border', 'border-red-100');
                 icon.className = 'fa-solid fa-circle-exclamation';
@@ -268,7 +320,7 @@
                 el.classList.add('bg-emerald-50', 'text-emerald-600', 'border', 'border-emerald-100');
                 icon.className = 'fa-solid fa-circle-check';
             }
-            
+
             text.innerText = msg;
             el.classList.remove('hidden');
         };
@@ -287,7 +339,31 @@
             }
         };
 
-        const redirect = () => window.location.href = '../panel/dashboard.html';
+        const redirect = () => {
+            // Smart Redirect Check
+            const pendingIntent = sessionStorage.getItem('pending_intent');
+            if (pendingIntent) {
+                try {
+                    const intent = JSON.parse(pendingIntent);
+                    if (intent.type === 'open_product' && intent.productId) {
+                        // Clear intent so it doesn't persist forever
+                        sessionStorage.removeItem('pending_intent');
+
+                        // Construct Return URL (Add ID param if missing/needed)
+                        const returnUrl = new URL(intent.returnUrl || '../public/catalogo.html', window.location.origin);
+                        returnUrl.searchParams.set('id', intent.productId);
+
+                        window.location.href = returnUrl.toString();
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Error parsing pending intent:", e);
+                }
+            }
+
+            // Default Redirect
+            window.location.href = '../panel/dashboard.html';
+        };
 
         // --- LOGICA FORMULARIOS ---
 
@@ -296,11 +372,11 @@
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            
+
             setLoading('btn-submit-login', true);
-            
+
             const result = await loginUser(email, pass);
-            
+
             if (result.success) {
                 redirect();
             } else {
@@ -334,11 +410,11 @@
         document.getElementById('form-recovery').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('rec-email').value;
-            
+
             setLoading('btn-submit-recovery', true);
-            
+
             const result = await recoverPassword(email);
-            
+
             if (result.success) {
                 showFeedback('success', 'Enlace enviado. Revisa tu correo.');
                 document.getElementById('form-recovery').reset();
@@ -372,4 +448,5 @@
 
     </script>
 </body>
+
 </html>

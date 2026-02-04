@@ -125,6 +125,51 @@ const Utils = {
             return '../';
         }
         return './';
+    },
+
+    // ------------------------------------------------------------------------
+    // 4. INTERACCIONES (Share, Copy, Feedback)
+    // ------------------------------------------------------------------------
+
+    /**
+     * Comparte contenido usando la API nativa o copiando al portapapeles.
+     * @param {Object} data - { title, text, url }
+     */
+    shareContent: async ({ title, text, url }) => {
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: title || 'English To Go',
+                    text: text || '',
+                    url: url || window.location.href
+                });
+                return true;
+            } else {
+                await navigator.clipboard.writeText(url);
+                Utils.showToast("¡Enlace copiado al portapapeles!");
+                return true;
+            }
+        } catch (err) {
+            console.error("Error al compartir:", err);
+            return false;
+        }
+    },
+
+    /**
+     * Muestra una notificación temporal tipo Toast.
+     * @param {string} message 
+     */
+    showToast: (message) => {
+        const toast = document.createElement('div');
+        toast.className = "fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-lg z-[9999] text-sm font-bold flex items-center gap-2 animate-fade-in-up";
+        toast.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> ${message}`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translate(-50%, 20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 };
 
@@ -139,6 +184,6 @@ window.utils = Utils;
 export default Utils;
 
 // 3. Exportar funciones individuales si se prefiere destructuring
-export const { formatCurrency, formatDate, debounce, getBasePath, getURLParam } = Utils;
+export const { formatCurrency, formatDate, debounce, getBasePath, getURLParam, shareContent, showToast } = Utils;
 
 console.log("✅ Utils cargado correctamente");

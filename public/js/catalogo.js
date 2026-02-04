@@ -12,6 +12,7 @@ import {
     collection, getDocs, query, orderBy, where, addDoc, serverTimestamp, doc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import ProductModal from "./product-modal.js";
 
 // 2. CONFIGURACIÓN (CATEGORÍAS)
 const CATEGORIAS = {
@@ -26,6 +27,7 @@ const CATEGORIAS = {
 // 3. ESTADO LOCAL (EN MEMORIA)
 const localState = {
     allProducts: [],      // Todos los productos descargados de Firebase
+    allTeachers: [],      // Todos los profesores (para búsqueda por nombre)
     filteredProducts: [], // Subconjunto que cumple los filtros actuales
     visibleLimit: 12,     // Cuántos mostramos actualmente (paginación virtual)
     pageSize: 12,         // Cuántos más añadir al dar "Cargar más"
@@ -71,6 +73,9 @@ const ui = {
     noResults: document.getElementById('noResults'),
     loadMoreContainer: null,
     scrollArea: document.getElementById('main-scroll-area'),
+    // Teacher Discovery
+    teacherResultsContainer: document.getElementById('teacherResultsContainer'),
+    teacherResultsGrid: document.getElementById('teacherResultsGrid'),
     // Modal References
     modal: {
         container: document.getElementById('productModal'),
@@ -100,7 +105,7 @@ async function init() {
     createLoadMoreButton();
     populateSelects();
     setupEvents();
-    setupModalLogic(); // Nueva lógica del modal
+    ProductModal.init(); // Usar modulo compartido
     setupCreatorCta(); // CTA visibility for logged-in non-creators
 
     // Carga paralela: Profesores y Productos
@@ -197,8 +202,19 @@ function setupEvents() {
     if (ui.mobileOverlay) ui.mobileOverlay.onclick = () => toggleSidebar(false);
 
     window.addEventListener('toggle-search', () => {
-        ui.searchContainer.classList.toggle('hidden');
-        if (!ui.searchContainer.classList.contains('hidden')) ui.searchInput.focus();
+        const isCurrentlyHidden = ui.searchContainer.classList.contains('hidden') ||
+            ui.searchContainer.classList.contains('mobile-hidden');
+
+        if (isCurrentlyHidden) {
+            // Show on mobile
+            ui.searchContainer.classList.remove('hidden', 'mobile-hidden');
+            ui.searchContainer.classList.add('block');
+            ui.searchInput.focus();
+        } else {
+            // Hide on mobile
+            ui.searchContainer.classList.add('mobile-hidden');
+            ui.searchContainer.classList.remove('block');
+        }
     });
 
     if (ui.toggleFiltersBtn) {
@@ -252,39 +268,7 @@ function setupEvents() {
     window.addEventListener('cart-updated', updateAllCartButtons);
 }
 
-function setupModalLogic() {
-    if (!ui.modal.container) return;
 
-    const close = () => closeProductModal();
-    ui.modal.btnClose.onclick = close;
-    ui.modal.backdrop.onclick = close;
-
-    // Add to Cart en Modal
-    // Add to Cart en Modal
-    ui.modal.btnAdd.onclick = () => {
-        if (localState.currentProduct) {
-            if (localState.currentProduct.es_gratis) {
-                handleFreeDownload(localState.currentProduct, ui.modal.btnAdd);
-            } else {
-                handleQuickAdd(localState.currentProduct, ui.modal.btnAdd);
-            }
-        }
-    };
-
-    // Share en Modal
-    ui.modal.btnShare.onclick = () => {
-        if (localState.currentProduct) {
-            handleShare(localState.currentProduct);
-        }
-    };
-
-    // Cerrar con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !ui.modal.container.classList.contains('hidden')) {
-            close();
-        }
-    });
-}
 
 /**
  * 6. LÓGICA DE DATOS (PRODUCTOS)
@@ -317,6 +301,9 @@ async function fetchAllProducts() {
 
         applyFilters();
 
+        // Deep Link: Abrir modal si hay un ID de producto en la URL
+        checkDeepLink();
+
     } catch (e) {
         console.error("Error cargando productos:", e);
         ui.grid.innerHTML = '<div class="col-span-full text-center text-red-500">Hubo un error cargando los materiales. Por favor recarga la página.</div>';
@@ -326,11 +313,44 @@ async function fetchAllProducts() {
 }
 
 /**
+ * DEEP LINK: Detecta si la URL tiene parámetro ?id= y abre el modal automáticamente
+ */
+function checkDeepLink() {
+    const productId = window.utils?.getURLParam('id');
+    if (!productId) return;
+
+    console.log("[DeepLink] Detected product ID in URL:", productId);
+
+    // Find product in loaded products
+    const product = localState.allProducts.find(p => p.id === productId);
+    if (product) {
+        console.log("[DeepLink] Opening modal for:", product.titulo);
+        ProductModal.open(product);
+    } else {
+        console.warn("[DeepLink] Product not found:", productId);
+    }
+}
+
+/**
  * 7. LÓGICA DE FILTRADO
  */
 function applyFilters() {
     const f = localState.filters;
     localState.visibleLimit = localState.pageSize;
+
+    // --- TEACHER DISCOVERY: Search teachers by name ---
+    if (f.search && f.search.length >= 2 && localState.allTeachers.length > 0) {
+        const searchLower = f.search.toLowerCase();
+        const matchingTeachers = localState.allTeachers.filter(t =>
+            t._searchString.includes(searchLower)
+        );
+        renderTeacherCards(matchingTeachers);
+    } else {
+        // Hide teacher results when no search or no matches
+        if (ui.teacherResultsContainer) {
+            ui.teacherResultsContainer.classList.add('hidden');
+        }
+    }
 
     localState.filteredProducts = localState.allProducts.filter(p => {
         if (f.search && !p._searchString.includes(f.search.toLowerCase())) return false;
@@ -350,6 +370,50 @@ function applyFilters() {
 
     updateUIControls();
     renderGrid();
+}
+
+/**
+ * 7B. TEACHER DISCOVERY - Render Profile Cards
+ */
+function renderTeacherCards(teachers) {
+    if (!ui.teacherResultsContainer || !ui.teacherResultsGrid) return;
+
+    if (teachers.length === 0) {
+        ui.teacherResultsContainer.classList.add('hidden');
+        return;
+    }
+
+    ui.teacherResultsContainer.classList.remove('hidden');
+    ui.teacherResultsGrid.innerHTML = '';
+
+    teachers.slice(0, 4).forEach(teacher => {
+        // Count products for this teacher
+        const productCount = localState.allProducts.filter(p => p.creador_uid === teacher.uid).length;
+
+        const card = document.createElement('div');
+        card.className = 'teacher-profile-card';
+        card.innerHTML = `
+            <img src="${teacher.photoURL}" alt="${teacher.displayName}" class="avatar">
+            <div class="info">
+                <p class="name">
+                    ${teacher.displayName}
+                    <span class="badge"><i class="fa-solid fa-check"></i> Creador</span>
+                </p>
+                <p class="meta">
+                    <span><i class="fa-solid fa-box-open"></i> ${productCount} materiales</span>
+                </p>
+            </div>
+            <div class="action">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        `;
+
+        card.onclick = () => {
+            window.location.href = `panel/perfil.html?uid=${teacher.uid}`;
+        };
+
+        ui.teacherResultsGrid.appendChild(card);
+    });
 }
 
 /**
@@ -418,9 +482,9 @@ function renderGrid() {
                 <div class="border-t border-slate-100 pt-4">
                     <div class="flex flex-col gap-1 mb-3">
                         <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Creado por</span>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded-lg p-1 -ml-1 transition-colors relative z-20" id="creator-link-${p.id}">
                             <img src="${p.creador_foto || 'https://i.imgur.com/O1F7GGy.png'}" class="w-6 h-6 rounded-full object-cover border border-slate-200">
-                            <span class="text-xs text-slate-700 font-bold truncate">${teacherName}</span>
+                            <span class="text-xs text-slate-700 font-bold truncate hover:text-indigo-600">${teacherName}</span>
                         </div>
                     </div>
                     
@@ -446,7 +510,7 @@ function renderGrid() {
         ui.grid.appendChild(card);
 
         // 1. ENTIRE CARD opens modal
-        card.onclick = () => openProductModal(p);
+        card.onclick = () => ProductModal.open(p);
 
         // 2. Botón Share
         document.getElementById(shareBtnId).onclick = (e) => {
@@ -467,6 +531,17 @@ function renderGrid() {
 
         // 4. Estado Inicial del Botón
         updateButtonState(addBtn, p.id);
+
+        // 5. Creator Link Click
+        const creatorLink = document.getElementById(`creator-link-${p.id}`);
+        if (creatorLink) {
+            creatorLink.onclick = (e) => {
+                e.stopPropagation();
+                if (p.creador_uid) {
+                    window.location.href = `panel/perfil.html?uid=${p.creador_uid}`;
+                }
+            };
+        }
     });
 
     if (ui.loadMoreContainer) {
@@ -477,233 +552,10 @@ function renderGrid() {
 /**
  * 9. LÓGICA DEL MODAL CON CAROUSEL
  */
-function openProductModal(p) {
-    localState.currentProduct = p;
-    const m = ui.modal;
-
-    // 1. Render Gallery (Multi-image CAROUSEL)
-    if (m.galleryContainer) {
-        m.galleryContainer.innerHTML = ''; // Clear previous
-
-        const images = (p.imagenes_preview && p.imagenes_preview.length)
-            ? p.imagenes_preview
-            : (p._img ? [p._img] : []);
-
-        const meta = getFileMeta(p.tipo_archivo, p.tipo_entrega);
-
-        if (images.length === 0) {
-            // Fallback placeholder
-            m.galleryContainer.innerHTML = `
-                <div class="w-full h-64 md:h-full bg-slate-50 flex items-center justify-center text-slate-300 text-5xl min-h-[300px]">
-                    ${meta.icon}
-                </div>
-            `;
-        } else {
-            // Create Carousel Structure
-            const carouselHTML = `
-                <div class="carousel-container">
-                    <div class="carousel-track" id="carouselTrack">
-                        ${images.map((src, index) => `
-                            <div class="carousel-slide">
-                                <img src="${src}" loading="${index === 0 ? 'eager' : 'lazy'}" alt="${p.titulo} - imagen ${index + 1}">
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    ${images.length > 1 ? `
-                        <!-- Navigation Arrows -->
-                        <button class="carousel-nav prev" id="carouselPrev" aria-label="Imagen anterior">
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button class="carousel-nav next" id="carouselNext" aria-label="Siguiente imagen">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                        
-                        <!-- Indicators -->
-                        <div class="carousel-indicators" id="carouselIndicators">
-                            ${images.map((_, index) => `
-                                <button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Ir a imagen ${index + 1}"></button>
-                            `).join('')}
-                        </div>
-                        
-                        <!-- Counter Badge -->
-                        <div class="carousel-counter">
-                            <span id="carouselCounter">1</span> / ${images.length}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-
-            m.galleryContainer.innerHTML = carouselHTML;
-
-            // Initialize Carousel Logic (only if multiple images)
-            if (images.length > 1) {
-                initCarousel(images.length);
-            }
-        }
-    }
-
-    // 2. Populate Info
-    m.levelTag.innerText = p.levels ? p.levels.join(", ") : "Nivel General";
-    m.title.innerText = p.titulo;
-    m.teacherName.innerText = p.creador_nombre || p.autor || "English To Go";
-    m.teacherImg.src = p.creador_foto || 'https://i.imgur.com/O1F7GGy.png';
-    m.desc.innerText = p.descripcion || "Sin descripción detallada.";
-
-    m.skill.innerText = p.skills ? p.skills.join(", ") : "Varias";
-    m.grammar.innerText = p.grammar ? p.grammar.join(", ") : "General";
-
-    const price = p.es_gratis ? "GRATIS" : (window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`);
-    m.price.innerText = price;
-
-    if (p.es_gratis) {
-        m.price.classList.add('text-emerald-600');
-        m.price.classList.remove('text-slate-900');
-    } else {
-        m.price.classList.add('text-slate-900');
-        m.price.classList.remove('text-emerald-600');
-    }
-
-    // Actualizar estado botón Modal
-    updateButtonState(m.btnAdd, p.id);
-
-    // Mostrar (Transiciones CSS manuales si Tailwind no las maneja auto)
-    m.container.classList.remove('hidden');
-
-    // Animación Entrada
-    setTimeout(() => {
-        m.backdrop.classList.remove('opacity-0');
-        m.panel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
-        m.panel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
-    }, 10);
-
-    document.body.style.overflow = 'hidden'; // Lock scroll
-}
-
 /**
- * Carousel Logic (Navigation, Touch, Keyboard)
+ * 10. INTERACCIONES INTELIGENTES (ADD & SHARE)
+ * Replaced modal logic with ProductModal.js
  */
-let carouselState = {
-    currentIndex: 0,
-    totalSlides: 0,
-    touchStartX: 0,
-    touchEndX: 0,
-    track: null,
-    indicators: null,
-    counter: null
-};
-
-function initCarousel(totalSlides) {
-    carouselState.currentIndex = 0;
-    carouselState.totalSlides = totalSlides;
-    carouselState.track = document.getElementById('carouselTrack');
-    carouselState.indicators = document.querySelectorAll('.carousel-indicator');
-    carouselState.counter = document.getElementById('carouselCounter');
-
-    // Navigation Buttons
-    const prevBtn = document.getElementById('carouselPrev');
-    const nextBtn = document.getElementById('carouselNext');
-
-    if (prevBtn) prevBtn.onclick = () => navigateCarousel(-1);
-    if (nextBtn) nextBtn.onclick = () => navigateCarousel(1);
-
-    // Indicators
-    carouselState.indicators.forEach((indicator, index) => {
-        indicator.onclick = () => goToSlide(index);
-    });
-
-    // Touch Support (Swipe)
-    if (carouselState.track) {
-        carouselState.track.addEventListener('touchstart', handleTouchStart, { passive: true });
-        carouselState.track.addEventListener('touchend', handleTouchEnd, { passive: true });
-    }
-
-    // Keyboard Navigation (Arrow keys)
-    const keyHandler = (e) => {
-        if (!ui.modal.container.classList.contains('hidden')) {
-            if (e.key === 'ArrowLeft') navigateCarousel(-1);
-            if (e.key === 'ArrowRight') navigateCarousel(1);
-        }
-    };
-    document.addEventListener('keydown', keyHandler);
-
-    // Cleanup on modal close
-    ui.modal.container.dataset.carouselKeyHandler = 'active';
-}
-
-function navigateCarousel(direction) {
-    carouselState.currentIndex += direction;
-
-    // Loop behavior
-    if (carouselState.currentIndex < 0) {
-        carouselState.currentIndex = carouselState.totalSlides - 1;
-    } else if (carouselState.currentIndex >= carouselState.totalSlides) {
-        carouselState.currentIndex = 0;
-    }
-
-    updateCarouselView();
-}
-
-function goToSlide(index) {
-    carouselState.currentIndex = index;
-    updateCarouselView();
-}
-
-function updateCarouselView() {
-    const offset = -carouselState.currentIndex * 100;
-    if (carouselState.track) {
-        carouselState.track.style.transform = `translateX(${offset}%)`;
-    }
-
-    // Update indicators
-    carouselState.indicators.forEach((indicator, index) => {
-        indicator.classList.toggle('active', index === carouselState.currentIndex);
-    });
-
-    // Update counter
-    if (carouselState.counter) {
-        carouselState.counter.innerText = carouselState.currentIndex + 1;
-    }
-}
-
-function handleTouchStart(e) {
-    carouselState.touchStartX = e.changedTouches[0].screenX;
-}
-
-function handleTouchEnd(e) {
-    carouselState.touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-}
-
-function handleSwipe() {
-    const swipeThreshold = 50;
-    const diff = carouselState.touchStartX - carouselState.touchEndX;
-
-    if (Math.abs(diff) > swipeThreshold) {
-        if (diff > 0) {
-            // Swipe left -> next
-            navigateCarousel(1);
-        } else {
-            // Swipe right -> prev
-            navigateCarousel(-1);
-        }
-    }
-}
-
-function closeProductModal() {
-    const m = ui.modal;
-    localState.currentProduct = null;
-
-    // Animación Salida
-    m.backdrop.classList.add('opacity-0');
-    m.panel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
-    m.panel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
-
-    setTimeout(() => {
-        m.container.classList.add('hidden');
-        document.body.style.overflow = ''; // Unlock scroll
-    }, 300);
-}
 
 /**
  * 10. INTERACCIONES INTELIGENTES (ADD & SHARE)
@@ -794,10 +646,10 @@ async function handleQuickAdd(product, btnElement) {
 }
 
 async function handleShare(product) {
-    const url = window.location.href.split('?')[0] + `?id=${product.id}`; // O link directo al producto
+    const url = `${window.location.origin}/catalogo.html?id=${product.id}`;
     // Texto persuasivo
     const priceText = product.es_gratis ? "¡Es GRATIS!" : `Cuesta solo $${product.precio}`;
-    const text = `🔥 ¡Profe, mira este material! "${product.titulo}" te va a ahorrar horas de planeación. ${priceText}. Descárgalo aquí: ${url}`;
+    const text = `🔥 ¡Profe, mira este material! "${product.titulo}" te va a ahorrar horas de planeación. ${priceText}. Descárgalo aquí:`;
 
     try {
         if (navigator.share) {
@@ -807,8 +659,12 @@ async function handleShare(product) {
                 url: url
             });
         } else {
-            await navigator.clipboard.writeText(text);
-            alert("¡Enlace copiado al portapapeles! Compártelo donde quieras.");
+            await navigator.clipboard.writeText(`${text} ${url}`);
+            if (window.utils?.showToast) {
+                window.utils.showToast("¡Enlace copiado al portapapeles!");
+            } else {
+                alert("¡Enlace copiado al portapapeles! Compártelo donde quieras.");
+            }
         }
     } catch (err) {
         console.error("Error compartiendo:", err);
@@ -823,8 +679,16 @@ async function handleFreeDownload(product, btnElement) {
 
     if (!user) {
         alert("Para descargar materiales gratuitos, por favor inicia sesión o regístrate.");
-        sessionStorage.setItem('redirect_after_login', window.location.href);
-        window.location.href = './auth/login.html';
+
+        // Smart Redirect: Save Intent
+        const intent = {
+            type: 'open_product',
+            productId: product.id,
+            returnUrl: window.location.href
+        };
+        sessionStorage.setItem('pending_intent', JSON.stringify(intent));
+
+        window.location.href = './auth/login.html?mode=register';
         return;
     }
 
@@ -886,6 +750,9 @@ async function fetchTeachers() {
         const snapshot = await getDocs(q);
         ui.teachersList.innerHTML = '';
 
+        // Reset and cache all teachers for search
+        localState.allTeachers = [];
+
         const allBtn = document.createElement('div');
         const isAllActive = localState.filters.teacherId === null;
         allBtn.className = `teacher-item cursor-pointer rounded-lg p-2 flex items-center gap-3 transition-colors ${isAllActive ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-slate-50 border border-transparent'}`;
@@ -897,14 +764,88 @@ async function fetchTeachers() {
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const realTeacherId = data.uid || docSnap.id;
+
+            // Cache teacher for search
+            localState.allTeachers.push({
+                uid: realTeacherId,
+                displayName: data.displayName || 'Profesor',
+                photoURL: data.photoURL || 'https://i.imgur.com/O1F7GGy.png',
+                bio: data.bio || '',
+                email: data.email || '',
+                _searchString: [
+                    data.displayName || '',
+                    data.bio || '',
+                    data.email || ''
+                ].join(' ').toLowerCase()
+            });
+
             const isActive = localState.filters.teacherId === realTeacherId;
-            const div = document.createElement('div');
-            div.className = `teacher-item cursor-pointer rounded-lg p-2 flex items-center gap-3 transition-colors ${isActive ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-slate-50 border border-transparent'}`;
-            div.setAttribute('data-name', (data.displayName || 'profesor').toLowerCase());
-            div.innerHTML = `<img src="${data.photoURL || 'https://i.imgur.com/O1F7GGy.png'}" class="w-8 h-8 rounded-full object-cover border border-slate-200"><div class="flex flex-col overflow-hidden"><span class="text-xs font-bold truncate ${isActive ? 'text-indigo-700' : 'text-slate-700'}">${data.displayName || 'Profesor'}</span>${isActive ? '<span class="text-[9px] text-indigo-500 font-medium">Seleccionado</span>' : ''}</div>`;
-            div.onclick = () => selectTeacher(realTeacherId);
-            ui.teachersList.appendChild(div);
+
+            // 1. Container Row
+            const row = document.createElement('div');
+            row.className = `teacher-item cursor-pointer rounded-lg p-2 flex items-center justify-between transition-colors group ${isActive ? 'bg-indigo-50 border border-indigo-200' : 'hover:bg-slate-50 border border-transparent'}`;
+            row.setAttribute('data-name', (data.displayName || 'profesor').toLowerCase());
+
+            // 2. Left Side: Avatar + Info (Triggers Filter)
+            const left = document.createElement('div');
+            left.className = "flex items-center gap-3 flex-1 min-w-0";
+            left.innerHTML = `
+                <img src="${data.photoURL || 'https://i.imgur.com/O1F7GGy.png'}" class="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0">
+                <div class="flex flex-col overflow-hidden">
+                    <span class="text-xs font-bold truncate ${isActive ? 'text-indigo-700' : 'text-slate-700'}">
+                        ${data.displayName || 'Profesor'}
+                    </span>
+                    ${isActive ? '<span class="text-[9px] text-indigo-500 font-medium">Seleccionado</span>' : ''}
+                </div>
+            `;
+
+            // Filter Action (Main Click)
+            row.onclick = () => selectTeacher(realTeacherId);
+
+            // 3. Right Side: Action Buttons
+            const right = document.createElement('div');
+            right.className = "flex items-center gap-1 pl-2";
+
+            // Button: View Profile
+            const btnView = document.createElement('button');
+            btnView.className = "w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-100 transition-colors";
+            btnView.title = "Ver Perfil Público";
+            btnView.innerHTML = '<i class="fa-solid fa-eye text-xs"></i>';
+            btnView.onclick = (e) => {
+                e.stopPropagation(); // Stop Filter
+                window.location.href = `panel/perfil.html?uid=${realTeacherId}`;
+            };
+
+            // Button: Share Profile
+            const btnShare = document.createElement('button');
+            btnShare.className = "w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-cyan-600 hover:bg-cyan-100 transition-colors";
+            btnShare.title = "Compartir Perfil";
+            btnShare.innerHTML = '<i class="fa-solid fa-share-nodes text-xs"></i>';
+            btnShare.onclick = async (e) => {
+                e.stopPropagation(); // Stop Filter
+                const url = `${window.location.origin}/panel/perfil.html?uid=${realTeacherId}`;
+                const text = `¡Mira el perfil de ${data.displayName || 'este creador'} en English To Go!`;
+
+                if (window.utils && window.utils.shareContent) {
+                    await window.utils.shareContent({
+                        title: 'English To Go - Perfil de Creador',
+                        text: text,
+                        url: url
+                    });
+                } else {
+                    console.error("Utils not loaded");
+                }
+            };
+
+            right.appendChild(btnView);
+            right.appendChild(btnShare);
+
+            row.appendChild(left);
+            row.appendChild(right);
+            ui.teachersList.appendChild(row);
         });
+
+        console.log(`[Teachers] Cached ${localState.allTeachers.length} teachers for search`);
     } catch (e) { console.error("Error fetching teachers:", e); }
 }
 

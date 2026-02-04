@@ -45,6 +45,9 @@ class AppHeader extends HTMLElement {
         const hasSearch = this.hasAttribute('with-search');
         const searchClass = hasSearch ? 'lg:hidden' : 'hidden';
 
+        // Detectar si estamos en catálogo
+        const isCatalog = window.location.pathname.includes('catalogo.html');
+
         this.innerHTML = `
         <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center fixed top-0 w-full z-50 h-[74px]">
             
@@ -59,10 +62,31 @@ class AppHeader extends HTMLElement {
                         English To Go <span class="text-indigo-600">Materials</span>
                     </span>
                 </a>
+
+                <!-- CTA Catálogo (Removed from here) -->
             </div>
         
             <div class="flex items-center gap-2 sm:gap-4 relative" id="header-user-container">
                 
+                <!-- CTA Catálogo (Mobile - Compact Circular) -->
+                ${!isCatalog ? `
+                <a href="${basePath}/catalogo.html" 
+                   id="header-catalog-btn-mobile"
+                   class="lg:hidden flex items-center justify-center w-10 h-10 bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 rounded-full transition-all active:scale-95 shadow-sm"
+                   title="Explorar Catálogo">
+                    <i class="fa-solid fa-layer-group text-sm"></i>
+                </a>
+                ` : ''}
+                
+                <!-- CTA Catálogo (Desktop - Full Button) -->
+                ${!isCatalog ? `
+                <a href="${basePath}/catalogo.html" 
+                   class="hidden lg:flex items-center gap-2 bg-white text-slate-700 border border-slate-200 hover:border-indigo-600 hover:text-indigo-600 px-5 py-2 rounded-full font-bold text-sm transition-all active:scale-95 shadow-sm hover:shadow-md">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Explorar Catálogo
+                </a>
+                ` : ''}
+
                 <button id="header-search-trigger" class="${searchClass} p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors focus:outline-none">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </button>
@@ -76,7 +100,14 @@ class AppHeader extends HTMLElement {
                     <i class="fa-solid fa-circle-notch fa-spin"></i>
                 </div>
 
-                <a id="btn-login" href="${basePath}/auth/login.html" class="hidden flex items-center gap-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-5 py-2.5 rounded-full transition-all border border-indigo-200">
+                <!-- Login Button (Mobile - Compact Circular) -->
+                <a id="btn-login-mobile" href="${basePath}/auth/login.html" class="hidden lg:hidden items-center justify-center w-10 h-10 bg-slate-100 text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-full transition-all active:scale-95 shadow-sm"
+                   title="Iniciar Sesión">
+                    <i class="fa-solid fa-user text-sm"></i>
+                </a>
+                
+                <!-- Login Button (Desktop - Full Button) -->
+                <a id="btn-login" href="${basePath}/auth/login.html" class="hidden lg:flex items-center gap-2 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-5 py-2.5 rounded-full transition-all border border-indigo-200">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Sesión
                 </a>
 
@@ -95,20 +126,20 @@ class AppHeader extends HTMLElement {
                             <p class="text-xs text-slate-400 uppercase font-bold">Navegación</p> 
                         </div>
 
-                        <a href="${basePath}/panel/perfil.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">
-                            <i class="fa-solid fa-user w-6"></i> Mi Perfil
+                        <a href="${basePath}/panel/dashboard.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors"> 
+                            <i class="fa-solid fa-house w-6"></i> Panel Principal
                         </a>
-                        
+
                         <a href="${basePath}/catalogo.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">
                             <i class="fa-solid fa-magnifying-glass w-6"></i> Explorar Catálogo
                         </a>
             
-                        <a href="${basePath}/panel/dashboard.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors"> 
-                            <i class="fa-solid fa-house w-6"></i> Panel Principal
-                        </a>
-            
                         <a href="${basePath}/panel/biblioteca.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">
                             <i class="fa-solid fa-folder-open w-6"></i> Mi Biblioteca
+                        </a>
+
+                        <a href="${basePath}/panel/perfil.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">
+                            <i class="fa-solid fa-user w-6"></i> Mi Perfil
                         </a>
                         
                         <div id="menu-teacher-section" class="hidden">
@@ -119,7 +150,7 @@ class AppHeader extends HTMLElement {
                                 <i class="fa-solid fa-cloud-arrow-up w-6"></i> Subir Material
                             </a>
                             <a href="${basePath}/panel/portafolio.html" class="block px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 font-medium transition-colors"> 
-                                <i class="fa-solid fa-chart-line w-6"></i> Mis Ventas
+                                <i class="fa-solid fa-chart-line w-6"></i> Gestión de Materiales
                             </a>
                         </div>
             
@@ -140,6 +171,7 @@ class AppHeader extends HTMLElement {
         const els = {
             loading: this.querySelector('#auth-loading'),
             loginBtn: this.querySelector('#btn-login'),
+            loginBtnMobile: this.querySelector('#btn-login-mobile'),
             loggedArea: this.querySelector('#user-logged-area'),
             userName: this.querySelector('#user-name-display'),
             userAvatar: this.querySelector('#user-avatar-display'),
@@ -152,7 +184,13 @@ class AppHeader extends HTMLElement {
 
             if (user) {
                 this.user = user;
+                // Hide both login buttons (mobile & desktop)
                 els.loginBtn.classList.add('hidden');
+                els.loginBtn.classList.remove('lg:flex');
+                if (els.loginBtnMobile) {
+                    els.loginBtnMobile.classList.add('hidden');
+                    els.loginBtnMobile.classList.remove('flex');
+                }
                 els.loggedArea.classList.remove('hidden');
 
                 els.userName.innerText = user.displayName?.split(' ')[0] || "Usuario";
@@ -175,7 +213,13 @@ class AppHeader extends HTMLElement {
             } else {
                 this.user = null;
                 els.loggedArea.classList.add('hidden');
-                els.loginBtn.classList.remove('hidden');
+                // Show both login buttons with their responsive visibility
+                els.loginBtn.classList.add('hidden');
+                els.loginBtn.classList.add('lg:flex');
+                if (els.loginBtnMobile) {
+                    els.loginBtnMobile.classList.remove('hidden');
+                    els.loginBtnMobile.classList.add('flex', 'lg:hidden');
+                }
             }
         });
     }

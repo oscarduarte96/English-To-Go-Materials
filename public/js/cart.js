@@ -146,8 +146,17 @@ window.addToCart = async (product) => {
 
     if (!user) {
         alert("Para agregar productos al carrito y sincronizarlos entre tus dispositivos, por favor inicia sesión.");
-        sessionStorage.setItem('redirect_after_login', window.location.href);
-        window.location.href = '../auth/login.html';
+
+        // Smart Redirect: Save Intent
+        const intent = {
+            type: 'open_product',
+            productId: product.id,
+            returnUrl: window.location.href
+        };
+        sessionStorage.setItem('pending_intent', JSON.stringify(intent));
+
+        // Use 'register' mode to encourage signup, but login is fine too
+        window.location.href = '../auth/login.html?mode=register';
         return;
     }
 

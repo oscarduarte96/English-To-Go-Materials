@@ -152,8 +152,10 @@ async function loadLibrary(uid) {
                         levels: productData.levels || [],
                         es_gratis: productData.es_gratis || false,
                         // Modal Info
+                        // Modal Info
                         descripcion: productData.descripcion || productData.description || '',
-                        imagenes_preview: productData.imagenes_preview || []
+                        imagenes_preview: productData.imagenes_preview || [],
+                        creador_uid: productData.creador_uid || productData.autor_id || null // Ensure ID is captured
                     };
                 }
                 detailedResources.push(resourceData);
@@ -257,6 +259,7 @@ function renderLibrary() {
 
         // Teacher Image
         const teacherImg = res.creador_foto || 'https://i.imgur.com/O1F7GGy.png';
+        const creatorId = res.creador_uid;
 
         card.innerHTML = `
             <!-- Image Section -->
@@ -294,9 +297,9 @@ function renderLibrary() {
                 <div class="border-t border-slate-100 pt-4">
                     <div class="flex flex-col gap-1 mb-3">
                         <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Creado por</span>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded-lg p-1 -ml-1 transition-colors relative z-20" id="library-creator-${res.id}">
                             <img src="${teacherImg}" class="w-6 h-6 rounded-full object-cover border border-slate-200">
-                            <span class="text-xs text-slate-700 font-bold truncate">${res.autor}</span>
+                            <span class="text-xs text-slate-700 font-bold truncate hover:text-indigo-600">${res.autor}</span>
                         </div>
                     </div>
                     
@@ -329,6 +332,17 @@ function renderLibrary() {
             e.stopPropagation();
             handleShare(res);
         };
+
+        const creatorDiv = card.querySelector(`#library-creator-${res.id}`);
+        if (creatorDiv) {
+            creatorDiv.onclick = (e) => {
+                e.stopPropagation();
+                if (creatorId) {
+                    // Since we are in /panel/biblioteca.html and perfile is /panel/perfil.html
+                    window.location.href = `perfil.html?uid=${creatorId}`;
+                }
+            };
+        }
 
         // El botón de descarga también debe evitar abrir el modal si ya es un enlace directo
         const downloadBtn = card.querySelector('.download-btn');
@@ -486,6 +500,23 @@ function setupModalEvents() {
             if (e.key === 'ArrowRight') navigateCarousel(1);
         }
     });
+
+    // Creator Redirection in Modal
+    const redirectCreator = () => {
+        if (currentProduct && currentProduct.creador_uid) {
+            window.location.href = `perfil.html?uid=${currentProduct.creador_uid}`;
+        }
+    };
+
+    if (modal.teacherName) {
+        modal.teacherName.classList.add('cursor-pointer', 'hover:text-indigo-600', 'transition-colors');
+        modal.teacherName.onclick = redirectCreator;
+    }
+
+    if (modal.teacherImg) {
+        modal.teacherImg.classList.add('cursor-pointer', 'hover:opacity-80', 'transition-opacity');
+        modal.teacherImg.onclick = redirectCreator;
+    }
 }
 
 function openProductModal(product) {

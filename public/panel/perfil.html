@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="../assets/css/variables.css">
     <link rel="stylesheet" href="../assets/css/global.css">
     <link rel="stylesheet" href="../assets/css/responsive.css">
+    <link rel="stylesheet" href="../assets/css/components/product-modal.css">
 
     <style>
         /* Profile Header Styles */
@@ -144,6 +145,100 @@
             background: #eef2ff;
             color: #4f46e5;
         }
+
+        /* ========================================
+           CRITICAL PRIVACY FIX
+           Ensure private business stats NEVER show in public view
+           Multi-layer protection with maximum CSS specificity
+           ======================================== */
+        #creatorStats.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* --- Sidebar Styles (Ported from Catalogo) --- */
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 74px;
+        }
+
+        /* Layout modifications for sidebar */
+        .layout-wrapper {
+            display: flex;
+            min-height: calc(100vh - var(--header-height));
+
+            /* Header is fixed/sticky */
+            position: relative;
+        }
+
+        #sidebar {
+            width: var(--sidebar-width);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            height: calc(100vh - var(--header-height));
+            position: sticky;
+            top: var(--header-height);
+            overflow-y: auto;
+            border-right: 1px solid #e2e8f0;
+            background: white;
+            z-index: 40;
+        }
+
+        #sidebar.collapsed {
+            margin-left: calc(var(--sidebar-width) * -1);
+        }
+
+        #mobileOverlay {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+            z-index: 30;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @media (max-width: 1024px) {
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: var(--header-height);
+                bottom: 0;
+                height: auto;
+                transform: translateX(-100%);
+                margin-left: 0;
+                width: 85%;
+                max-width: 320px;
+                box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.1);
+            }
+
+            #sidebar.mobile-open {
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding-top: 0 !important;
+            }
+        }
     </style>
 
     <script type="module" src="../assets/js/components.js"></script>
@@ -155,11 +250,48 @@
     <div class="blob-indigo fixed top-0 left-0 opacity-40 pointer-events-none -z-10"></div>
     <div class="blob-cyan fixed bottom-0 right-0 opacity-40 pointer-events-none -z-10"></div>
 
-    <app-header no-sidebar="true" class="sticky top-0 z-50"></app-header>
+    <app-header class="sticky top-0 z-50"></app-header>
 
-    <div class="flex flex-col min-h-screen pt-[74px]">
+    <div class="layout-wrapper w-full">
 
-        <main class="flex-1 w-full animate-fade-in">
+        <div id="mobileOverlay" class="fixed inset-0 hidden lg:hidden opacity-0 pointer-events-none"></div>
+
+        <aside id="sidebar" class="custom-scroll flex flex-col pb-20 lg:pb-0">
+            <div class="p-5 border-b border-slate-100 sticky top-0 bg-white z-10 flex-shrink-0">
+                <h3
+                    class="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-chalkboard-user"></i> Creadores
+                </h3>
+                <div class="relative group">
+                    <i
+                        class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs group-focus-within:text-indigo-500"></i>
+                    <input type="text" id="teacherSearch" placeholder="Buscar profesor..."
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-8 pr-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all">
+                </div>
+            </div>
+
+            <div class="flex-grow overflow-y-auto min-h-0">
+                <div id="teachersList" class="p-3 space-y-1">
+                    <!-- JS will populate -->
+                    <div class="text-center py-4 text-xs text-slate-400">Cargando...</div>
+                </div>
+            </div>
+
+            <!-- CTA for logged-in non-creators -->
+            <div id="creatorCta" class="p-4 flex-shrink-0 border-t border-slate-100 bg-slate-50/80 hidden">
+                <div
+                    class="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-4 text-white shadow-lg shadow-indigo-500/20 text-center">
+                    <i class="fa-solid fa-award text-2xl mb-2 opacity-80"></i>
+                    <p class="text-xs font-bold mb-1">¿Eres Docente?</p>
+                    <p class="text-[10px] opacity-80 mb-3">Vende tus materiales aquí</p>
+                    <a href="aplicar-creador.html"
+                        class="block w-full py-2 bg-white text-indigo-600 text-[10px] font-black uppercase rounded-lg hover:bg-indigo-50 transition-colors">Aplicar
+                        Ahora</a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 w-full animate-fade-in custom-scroll relative overflow-y-auto h-full">
 
             <!-- ==================== PROFILE HEADER ==================== -->
             <section class="relative">
@@ -179,11 +311,18 @@
                             <!-- Avatar -->
                             <div class="relative group">
                                 <img id="profileAvatar" src="https://i.imgur.com/O1F7GGy.png" alt="Foto de perfil"
-                                    class="profile-avatar rounded-full object-cover bg-white">
+                                    class="profile-avatar rounded-full object-cover bg-white transition-opacity duration-300">
+                                <!-- Loading Overlay -->
+                                <div id="avatarLoading"
+                                    class="absolute inset-0 bg-white/80 rounded-full hidden flex items-center justify-center z-20">
+                                    <i class="fa-solid fa-circle-notch fa-spin text-primary text-2xl"></i>
+                                </div>
                                 <button id="btnEditAvatar"
-                                    class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                    class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10">
                                     <i class="fa-solid fa-camera text-white text-2xl"></i>
                                 </button>
+                                <input type="file" id="fileAvatar" accept="image/png, image/jpeg, image/jpg, image/webp"
+                                    class="hidden">
                             </div>
 
                             <!-- Name & Meta -->
@@ -194,10 +333,15 @@
                                         Cargando...
                                     </h1>
                                     <!-- Verified Badge (Creators only) -->
-                                    <span id="verifiedBadge"
-                                        class="hidden bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-1">
-                                        <i class="fa-solid fa-check"></i> VERIFICADO
+                                    <span id="verifiedBadge" class="hidden text-blue-500 text-xl" title="Verificado">
+                                        <i class="fa-solid fa-circle-check"></i>
                                     </span>
+                                    <!-- Share Button (Moved) -->
+                                    <button id="btnShareProfile"
+                                        class="text-slate-400 hover:text-primary transition-colors ml-1 p-2 rounded-full hover:bg-slate-100"
+                                        title="Compartir Perfil">
+                                        <i class="fa-solid fa-share-nodes text-lg"></i>
+                                    </button>
                                 </div>
                                 <p id="profileEmail" class="text-slate-500 font-medium text-sm mb-2">
                                     email@example.com
@@ -215,10 +359,11 @@
                                 </button>
                                 <!-- Creator Dashboard Link (Creators Only) -->
                                 <a id="btnCreatorDashboard" href="portafolio.html"
-                                    class="hidden btn btn-primary text-sm py-2 px-4">
+                                    class="hidden btn btn-secondary text-sm py-2 px-4">
                                     <i class="fa-solid fa-chart-line"></i>
-                                    <span class="hidden md:inline">Panel de Control</span>
+                                    <span class="hidden md:inline">Gestión de Materiales</span>
                                 </a>
+
                             </div>
                         </div>
                     </div>
@@ -229,7 +374,8 @@
             <section class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
                 <!-- ========== CREATOR STATS (Creators Only) - Full Width ========== -->
-                <div id="creatorStats" class="hidden mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div id="creatorStats" class="hidden mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4"
+                    data-public-restrict="true">
                     <div class="stat-card rounded-2xl p-6 border border-slate-100 text-center shadow-sm">
                         <div
                             class="w-12 h-12 bg-indigo-50 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
@@ -446,26 +592,31 @@
 
             </section>
 
+            <app-footer></app-footer>
         </main>
-
-        <app-footer></app-footer>
     </div>
 
     <!-- Edit Profile Modal -->
-    <div id="editProfileModal" class="fixed inset-0 z-[100] hidden">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" id="editModalBackdrop"></div>
+    <div id="editProfileModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" id="editModalBackdrop"
+            style="touch-action: none;"></div>
         <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform scale-95 opacity-0 transition-all"
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col transform scale-95 opacity-0 transition-all"
                 id="editModalPanel">
-                <div class="p-6 border-b border-slate-100">
+                <div class="p-6 border-b border-slate-100 flex-shrink-0">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-black text-slate-900">Editar Perfil</h3>
-                        <button id="btnCloseEditModal" class="text-slate-400 hover:text-slate-600">
+                        <h3 class="text-lg font-black text-slate-900" id="modal-title">Editar Perfil</h3>
+                        <button id="btnCloseEditModal"
+                            class="text-slate-400 hover:text-slate-600 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-full p-1"
+                            aria-label="Cerrar modal">
                             <i class="fa-solid fa-xmark text-xl"></i>
                         </button>
                     </div>
                 </div>
-                <form id="editProfileForm" class="p-6 space-y-4">
+                <!-- CRITICAL: overscroll-behavior: contain PREVENTS scroll chaining -->
+                <form id="editProfileForm" class="p-6 space-y-4 overflow-y-auto flex-1 overscroll-contain"
+                    style="overscroll-behavior: contain;">
                     <div>
                         <label class="label">Nombre Completo</label>
                         <input type="text" id="editName" class="input-field" placeholder="Tu nombre">
@@ -491,6 +642,19 @@
                                 placeholder="URL de Instagram">
                         </div>
                         <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-x-twitter text-slate-800 w-5"></i>
+                            <input type="url" id="editTwitter" class="input-field text-sm"
+                                placeholder="URL de X (Twitter)">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-youtube text-red-600 w-5"></i>
+                            <input type="url" id="editYoutube" class="input-field text-sm" placeholder="URL de YouTube">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-tiktok text-slate-900 w-5"></i>
+                            <input type="url" id="editTiktok" class="input-field text-sm" placeholder="URL de TikTok">
+                        </div>
+                        <div class="flex items-center gap-2">
                             <i class="fa-solid fa-globe text-slate-600 w-5"></i>
                             <input type="url" id="editWebsite" class="input-field text-sm" placeholder="Tu sitio web">
                         </div>
@@ -503,9 +667,13 @@
         </div>
     </div>
 
+    <!-- Shopping Cart Drawer Component -->
+    <app-cart-drawer></app-cart-drawer>
+
     <!-- Scripts -->
     <script type="module" src="../assets/js/firebase-app.js"></script>
     <script type="module" src="../assets/js/utils.js"></script>
+    <script type="module" src="../js/cart.js"></script>
     <script type="module" src="./js/perfil.js"></script>
 
 </body>
