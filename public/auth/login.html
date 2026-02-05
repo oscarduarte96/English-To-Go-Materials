@@ -340,19 +340,23 @@
         };
 
         const redirect = () => {
-            // Smart Redirect Check
+            // 1. Check for 'returnTo' in URL (Priority #1)
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnTo = urlParams.get('returnTo');
+            if (returnTo) {
+                window.location.href = decodeURIComponent(returnTo);
+                return;
+            }
+
+            // 2. Smart Redirect Check (Priority #2)
             const pendingIntent = sessionStorage.getItem('pending_intent');
             if (pendingIntent) {
                 try {
                     const intent = JSON.parse(pendingIntent);
                     if (intent.type === 'open_product' && intent.productId) {
-                        // Clear intent so it doesn't persist forever
                         sessionStorage.removeItem('pending_intent');
-
-                        // Construct Return URL (Add ID param if missing/needed)
                         const returnUrl = new URL(intent.returnUrl || '../public/catalogo.html', window.location.origin);
                         returnUrl.searchParams.set('id', intent.productId);
-
                         window.location.href = returnUrl.toString();
                         return;
                     }
@@ -361,7 +365,7 @@
                 }
             }
 
-            // Default Redirect
+            // 3. Default Redirect
             window.location.href = '../panel/dashboard.html';
         };
 

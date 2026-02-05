@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Public Catalog Access
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false; // Admin only
+    }
+    match /creators/{creatorId} {
+      allow read: if true;
+      allow write: if false; // Admin only
+    }
+
+    // User Private Data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

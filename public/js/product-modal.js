@@ -228,7 +228,14 @@ const ProductModal = {
         els.price.innerText = priceFormatted;
 
         // Style Price & Button
-        if (product.es_gratis) {
+        // Style Price & Button
+        const purchasedIds = window.appState?.purchasedProductIds;
+        if (purchasedIds && purchasedIds.has(product.id)) {
+            // YA COMPRADO (Prioridad)
+            els.price.classList.add('text-indigo-600');
+            els.price.classList.remove('text-emerald-600', 'text-slate-900');
+            this.updateButtonToPurchased(els.btnAdd);
+        } else if (product.es_gratis) {
             els.price.classList.add('text-emerald-600');
             els.price.classList.remove('text-slate-900');
             this.updateButtonToDownload(els.btnAdd);
@@ -381,11 +388,35 @@ const ProductModal = {
         btn.innerHTML = `<span>Descargar Ahora</span> <i class="fa-solid fa-cloud-arrow-down group-hover:animate-bounce"></i>`;
     },
 
+    updateButtonToPurchased: function (btn) {
+        btn.className = "h-14 bg-indigo-50 text-indigo-600 font-bold rounded-2xl hover:bg-indigo-100 transition-all border border-indigo-200 flex items-center justify-center gap-2 group w-full";
+        btn.innerHTML = `<span>Adquirido • Ver en Biblioteca</span> <i class="fa-solid fa-check-circle"></i>`;
+
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            window.location.href = 'panel/biblioteca.html';
+        };
+    },
+
     updateButtonToCart: function (btn, detailId) {
         // Reset to default style
         btn.className = "h-14 bg-slate-900 text-white font-bold rounded-2xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200 active:scale-95 flex items-center justify-center gap-2 group w-full";
 
-        // Check if already in cart (requires window.appState.cart)
+        // 1. Check if Purchased
+        const purchasedIds = window.appState?.purchasedProductIds;
+        if (purchasedIds && purchasedIds.has(detailId)) {
+            btn.innerHTML = `<span>Adquirido • Ver en Biblioteca</span> <i class="fa-solid fa-check-circle"></i>`;
+            btn.className = "h-14 bg-indigo-50 text-indigo-600 font-bold rounded-2xl hover:bg-indigo-100 transition-all border border-indigo-200 flex items-center justify-center gap-2 group w-full";
+
+            // Override click behavior
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                window.location.href = 'panel/biblioteca.html';
+            };
+            return;
+        }
+
+        // 2. Check if in Cart
         const inCart = window.appState?.cart?.some(i => i.id === detailId);
 
         if (inCart) {

@@ -615,8 +615,8 @@ async function handleCheckout() {
         await clearCart();
         closeCart();
 
-        alert("¡Pedido creado exitosamente! Redirigiendo a tus compras...");
-        window.location.href = '../panel/biblioteca.html';
+        // Redirigir al Checkout de Micro-pagos (vía Bre-B / Manual)
+        window.location.href = `../checkout.html?order_id=${docRef.id}`;
 
     } catch (error) {
         console.error("Error en checkout:", error);

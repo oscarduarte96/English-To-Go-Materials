@@ -22,6 +22,7 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { auth } from "../../assets/js/firebase-app.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
 // 2. REFERENCIAS AL DOM
 const ui = {
@@ -80,6 +81,11 @@ async function initProductPage(id) {
 
         renderProduct(product);
         loadRelatedProducts(product); // Cargar relacionados basados en este producto
+
+        // Verificar compra (si aplica)
+        if (!product.es_gratis) {
+            setupPurchaseCheck(product.id);
+        }
 
     } catch (error) {
         console.error("Error cargando producto:", error);
@@ -204,6 +210,9 @@ function renderProduct(data) {
 
         } else {
             // CASO PAGO (Logica original)
+            // Primero, estado "loading" o "verificando" mientras carga auth
+            // Se resolvera en el listener de Auth
+
             ui.btnAddToCart.onclick = async (e) => {
                 e.preventDefault();
 
@@ -236,6 +245,62 @@ function renderProduct(data) {
             };
         }
     }
+}
+
+// 5.5 VERIFICAR SI YA FUE COMPRADO
+function setupPurchaseCheck(productId) {
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) return; // Si no hay usuario, queda estado por defecto ("Agregar")
+
+        try {
+            // Buscar si existe en alguna orden completada
+            const q = query(
+                collection(db, "orders"),
+                where("user_id", "==", user.uid),
+                where("status", "==", "completed")
+            );
+
+            // Nota: Esto descarga todas las órdenes. Si son muchas, idealmente filtraríamos más.
+            // Pero Firestore no permite array-contains en objetos complejos fácilmente sin índices.
+            // Una optimización futura sería guardar purchase_history en el user doc.
+
+            const snapshot = await getDocs(q);
+            let isPurchased = false;
+
+            for (const docSnap of snapshot.docs) {
+                const orderData = docSnap.data();
+                if (orderData.items && Array.isArray(orderData.items)) {
+                    if (orderData.items.some(item => item.id === productId)) {
+                        isPurchased = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isPurchased) {
+                updateButtonToPurchased();
+            }
+
+        } catch (error) {
+            console.error("Error verificando compra:", error);
+        }
+    });
+}
+
+function updateButtonToPurchased() {
+    if (!ui.btnAddToCart) return;
+
+    // Remover eventos anteriores (clonando nodo)
+    const newBtn = ui.btnAddToCart.cloneNode(true);
+    ui.btnAddToCart.parentNode.replaceChild(newBtn, ui.btnAddToCart);
+    ui.btnAddToCart = newBtn; // Actualizar referencia
+
+    ui.btnAddToCart.className = "w-full py-3.5 px-6 bg-indigo-50 text-indigo-600 border border-indigo-200 font-bold rounded-xl transition-all flex items-center justify-center gap-3 hover:bg-indigo-100 cursor-pointer shadow-sm";
+    ui.btnAddToCart.innerHTML = '<i class="fa-solid fa-folder-open text-lg"></i><span>Ver en mi Biblioteca</span>';
+
+    ui.btnAddToCart.onclick = () => {
+        window.location.href = 'panel/biblioteca.html';
+    };
 }
 
 /**

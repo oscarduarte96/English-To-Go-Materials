@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://materials.goenglishtogo.com/sitemap.xml

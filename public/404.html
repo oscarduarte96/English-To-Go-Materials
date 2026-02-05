@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada | English To Go</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/css/global.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',  /* Indigo 600 */
+                        secondary: '#06b6d4' /* Cyan 500 */
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .blob-purple {
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+        }
+
+        .blob-cyan {
+            position: absolute;
+            bottom: 20%;
+            right: 20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center relative overflow-hidden text-slate-800">
+
+    <div class="blob-purple"></div>
+    <div class="blob-cyan"></div>
+
+    <main class="relative z-10 text-center px-4 max-w-2xl mx-auto">
+        <div class="animate-float mb-8">
+            <i class="fa-solid fa-compass-drafting text-9xl text-indigo-200"></i>
+        </div>
+
+        <h1 class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500 mb-4">
+            404
+        </h1>
+
+        <h2 class="text-3xl font-bold text-slate-900 mb-6">
+            ¡Ups! Página no encontrada
+        </h2>
+
+        <p class="text-lg text-slate-600 mb-10 leading-relaxed">
+            Parece que te has perdido en el camino. La página que buscas no existe, ha sido movida o nunca debió estar
+            aquí.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/"
+                class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 group">
+                <i class="fa-solid fa-house"></i>
+                <span>Volver al Inicio</span>
+            </a>
+
+            <a href="/catalogo.html"
+                class="px-8 py-3 bg-white text-indigo-600 border-2 border-indigo-100 rounded-xl font-bold hover:border-indigo-200 hover:bg-indigo-50 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Ver Catálogo</span>
+            </a>
+        </div>
+    </main>
+
+</body>
+
+</html>

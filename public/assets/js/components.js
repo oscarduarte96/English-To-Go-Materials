@@ -45,6 +45,9 @@ class AppHeader extends HTMLElement {
         const hasSearch = this.hasAttribute('with-search');
         const searchClass = hasSearch ? 'lg:hidden' : 'hidden';
 
+        // Detectar modo checkout
+        const isCheckout = this.hasAttribute('checkout-mode');
+
         // Detectar si estamos en catálogo
         const isCatalog = window.location.pathname.includes('catalogo.html');
 
@@ -52,9 +55,11 @@ class AppHeader extends HTMLElement {
         <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center fixed top-0 w-full z-50 h-[74px]">
             
             <div class="flex items-center gap-4">
+                ${!isCheckout ? `
                 <button id="header-sidebar-toggle" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
+                ` : ''}
 
                 <a href="${basePath}/index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <img src="${basePath}/assets/img/logo.png" alt="Logo" class="w-10 h-10 rounded-full border border-slate-200 shadow-sm">
@@ -62,24 +67,20 @@ class AppHeader extends HTMLElement {
                         English To Go <span class="text-indigo-600">Materials</span>
                     </span>
                 </a>
-
-                <!-- CTA Catálogo (Removed from here) -->
             </div>
         
             <div class="flex items-center gap-2 sm:gap-4 relative" id="header-user-container">
                 
+                ${!isCheckout && !isCatalog ? `
                 <!-- CTA Catálogo (Mobile - Compact Circular) -->
-                ${!isCatalog ? `
                 <a href="${basePath}/catalogo.html" 
                    id="header-catalog-btn-mobile"
                    class="lg:hidden flex items-center justify-center w-10 h-10 bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 rounded-full transition-all active:scale-95 shadow-sm"
                    title="Explorar Catálogo">
                     <i class="fa-solid fa-layer-group text-sm"></i>
                 </a>
-                ` : ''}
                 
                 <!-- CTA Catálogo (Desktop - Full Button) -->
-                ${!isCatalog ? `
                 <a href="${basePath}/catalogo.html" 
                    class="hidden lg:flex items-center gap-2 bg-white text-slate-700 border border-slate-200 hover:border-indigo-600 hover:text-indigo-600 px-5 py-2 rounded-full font-bold text-sm transition-all active:scale-95 shadow-sm hover:shadow-md">
                     <i class="fa-solid fa-layer-group"></i>
@@ -87,6 +88,7 @@ class AppHeader extends HTMLElement {
                 </a>
                 ` : ''}
 
+                ${!isCheckout ? `
                 <button id="header-search-trigger" class="${searchClass} p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors focus:outline-none">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i>
                 </button>
@@ -95,6 +97,7 @@ class AppHeader extends HTMLElement {
                     <i class="fa-solid fa-cart-shopping text-xl"></i>
                     <span id="header-cart-badge" class="hidden absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white transform transition-transform group-hover:scale-110">0</span>
                 </button>
+                ` : ''}
 
                 <div id="auth-loading" class="text-slate-400 text-sm font-medium animate-pulse">
                     <i class="fa-solid fa-circle-notch fa-spin"></i>

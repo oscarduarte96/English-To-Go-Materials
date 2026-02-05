@@ -42,8 +42,10 @@ const localState = {
         context: "",
         exam: "",
         teacherId: null,
+        teacherId: null,
         price: ""
-    }
+    },
+    purchasedProductIds: new Set() // IDs de productos ya comprados
 };
 
 // 4. REFERENCIAS AL DOM
@@ -121,42 +123,39 @@ async function init() {
 
 function setupCreatorCta() {
     const creatorCta = document.getElementById('creatorCta');
-    if (!creatorCta) {
-        console.warn("[CreatorCTA] Element #creatorCta not found in DOM.");
-        return;
-    }
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            console.log("[CreatorCTA] User not logged in. Hiding CTA.");
-            creatorCta.classList.add('hidden');
+            console.log("[Auth] User not logged in.");
+            if (creatorCta) creatorCta.classList.add('hidden');
+            localState.purchasedProductIds.clear();
+            if (window.appState) window.appState.purchasedProductIds = new Set();
+            renderGrid(); // Re-render to clear "Purchased" status
             return;
         }
 
-        try {
-            console.log("[CreatorCTA] Checking role for user:", user.uid);
-            const userRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(userRef);
+        // 1. Cargar Compras del Usuario
+        await fetchUserPurchases(user.uid);
 
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                const isTeacher = !!(data.roles && data.roles.teacher); // Force boolean
+        // 2. Lógica Creator CTA
+        if (creatorCta) {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
 
-                console.log(`[CreatorCTA] Role data loaded. isTeacher=${isTeacher}`);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const isTeacher = !!(data.roles && data.roles.teacher);
 
-                if (!isTeacher) {
-                    console.log("[CreatorCTA] User is NOT a teacher. Showing CTA.");
-                    creatorCta.classList.remove('hidden');
-                } else {
-                    console.log("[CreatorCTA] User IS a teacher. Keeping CTA hidden.");
-                    // Ensure it stays hidden if they are a teacher
-                    creatorCta.classList.add('hidden');
+                    if (!isTeacher) {
+                        creatorCta.classList.remove('hidden');
+                    } else {
+                        creatorCta.classList.add('hidden');
+                    }
                 }
-            } else {
-                console.warn("[CreatorCTA] User document does not exist in Firestore.");
+            } catch (error) {
+                console.error("[CreatorCTA] Error checking user role:", error);
             }
-        } catch (error) {
-            console.error("[CreatorCTA] Error checking user role:", error);
         }
     });
 }
@@ -489,7 +488,7 @@ function renderGrid() {
                     </div>
                     
                     <!-- Action Bar (Responsive Grid/Flex) -->
-                    <div class="flex items-center gap-2 pt-2 lg:grid lg:grid-cols-[1fr_auto] lg:gap-x-0 lg:gap-y-3 lg:pt-0">
+                    <div class="flex flex-wrap items-center gap-2 pt-2 lg:grid lg:grid-cols-[1fr_auto] lg:gap-x-0 lg:gap-y-3 lg:pt-0">
                         <!-- Price: Left on Mobile, Top-Left on Desktop -->
                         <span class="text-base md:text-lg font-black ${p.es_gratis ? 'text-emerald-600' : 'text-slate-900'} tracking-tight leading-tight mr-auto lg:mr-0 lg:col-start-1 lg:row-start-1" title="${price}">${price}</span>
                         
@@ -571,7 +570,32 @@ function updateButtonState(btnElement, productId) {
     if (!btnElement) return;
     const state = getCartButtonState(productId);
 
-    // 0. Mirar si es GRATIS
+    // 0. Mirar SI YA FUE COMPRADO (Prioridad Máxima)
+    if (localState.purchasedProductIds.has(productId)) {
+        // Estado: YA COMPRADO
+        btnElement.className = btnElement.className.replace(/bg-slate-900|hover:bg-indigo-600|bg-emerald-50|text-emerald-600|border-emerald-200/g, '');
+        btnElement.classList.remove('bg-emerald-600', 'text-white', 'hover:bg-emerald-700', 'shadow-emerald-200', 'text-slate-900', 'bg-slate-900', 'hover:bg-indigo-600');
+
+        // Mobile Layout Fix: Full width, auto height to prevent overflow
+        btnElement.classList.remove('h-9', 'whitespace-nowrap');
+        btnElement.classList.add('bg-indigo-50', 'text-indigo-600', 'border', 'border-indigo-200', 'cursor-pointer', 'w-full', 'h-auto', 'py-2', 'min-h-[36px]');
+
+        btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-xs sm:text-sm">Adquirido • Ver en Biblioteca</span>`;
+
+        // Cambiar acción al hacer click para ir a la biblioteca
+        btnElement.onclick = (e) => {
+            e.stopPropagation();
+            window.location.href = 'panel/biblioteca.html';
+        };
+        btnElement.disabled = false;
+        return;
+    }
+
+    // Reset styles for non-purchased states (restore standard shape)
+    btnElement.classList.add('h-9', 'whitespace-nowrap');
+    btnElement.classList.remove('w-full', 'h-auto', 'py-2', 'min-h-[36px]');
+
+    // 1. Mirar si es GRATIS
     const product = localState.allProducts.find(p => p.id === productId);
     if (product?.es_gratis) {
         // Estilo "DESCARGAR"
@@ -600,7 +624,7 @@ function updateButtonState(btnElement, productId) {
     } else {
         // Estado: DISPONIBLE PARA AGREGAR
         btnElement.classList.add('bg-slate-900', 'text-white');
-        btnElement.classList.remove('bg-emerald-50', 'text-emerald-600', 'border', 'border-emerald-200');
+        btnElement.classList.remove('bg-emerald-50', 'text-emerald-600', 'border', 'border-emerald-200', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200');
         // Restauramos estilos hover según donde esté el botón
         if (btnElement.id === 'modalBtnAdd') {
             btnElement.classList.add('hover:bg-indigo-600');
@@ -611,6 +635,40 @@ function updateButtonState(btnElement, productId) {
             btnElement.innerHTML = `<i class="fa-solid fa-cart-shopping"></i> Agregar`;
         }
         btnElement.disabled = false;
+    }
+}
+
+/**
+ * Carga las compras del usuario para verificar propiedad
+ */
+async function fetchUserPurchases(uid) {
+    try {
+        const q = query(collection(db, "orders"), where("user_id", "==", uid), where("status", "==", "completed"));
+        const snapshot = await getDocs(q);
+
+        localState.purchasedProductIds.clear();
+
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.items && Array.isArray(data.items)) {
+                data.items.forEach(item => {
+                    if (item.id) localState.purchasedProductIds.add(item.id);
+                });
+            }
+        });
+
+        // Exponer a global para otros módulos (ProductModal)
+        window.appState = window.appState || {};
+        window.appState.purchasedProductIds = localState.purchasedProductIds;
+
+        console.log(`[Purchases] Loaded ${localState.purchasedProductIds.size} purchased items.`);
+
+        // Actualizar UI
+        renderGrid();
+        updateAllCartButtons();
+
+    } catch (e) {
+        console.error("Error loading usage purchases:", e);
     }
 }
 
