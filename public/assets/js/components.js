@@ -41,15 +41,16 @@ class AppHeader extends HTMLElement {
         const isRoot = !window.location.pathname.includes('/panel/') && !window.location.pathname.includes('/auth/');
         const basePath = isRoot ? '.' : '..';
 
+        // Detectar si estamos en catálogo
+        const isCatalog = window.location.pathname.includes('catalogo.html');
+
         // Visibilidad del buscador
         const hasSearch = this.hasAttribute('with-search');
-        const searchClass = hasSearch ? 'lg:hidden' : 'hidden';
+        // En catálogo: siempre visible. En otras páginas: solo móvil.
+        const searchClass = hasSearch ? (isCatalog ? '' : 'lg:hidden') : 'hidden';
 
         // Detectar modo checkout
         const isCheckout = this.hasAttribute('checkout-mode');
-
-        // Detectar si estamos en catálogo
-        const isCatalog = window.location.pathname.includes('catalogo.html');
 
         this.innerHTML = `
         <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center fixed top-0 w-full z-50 h-[74px]">

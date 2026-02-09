@@ -7,21 +7,22 @@
 import { auth, db } from "../assets/js/firebase-app.js";
 
 // 2. Importamos las funciones oficiales de Firebase Auth y Firestore
-import { 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     updateProfile,
-    GoogleAuthProvider, 
+    GoogleAuthProvider,
     signInWithPopup,
     sendPasswordResetEmail,
+    fetchSignInMethodsForEmail,
     signOut
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
-import { 
-    doc, 
-    setDoc, 
-    getDoc, 
-    serverTimestamp 
+import {
+    doc,
+    setDoc,
+    getDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 /**
@@ -35,6 +36,8 @@ function mapAuthError(errorCode) {
         case 'auth/weak-password': return "La contraseña es muy débil (mínimo 6 caracteres).";
         case 'auth/user-not-found': return "No existe una cuenta con este correo.";
         case 'auth/wrong-password': return "Contraseña incorrecta.";
+        case 'auth/invalid-credential':
+        case 'auth/invalid-login-credentials': return "Credenciales incorrectas.";
         case 'auth/too-many-requests': return "Demasiados intentos. Espera unos minutos.";
         case 'auth/popup-closed-by-user': return "Se cerró la ventana de inicio de sesión.";
         case 'auth/network-request-failed': return "Error de conexión. Revisa tu internet.";
@@ -51,7 +54,13 @@ export async function loginUser(email, password) {
         return { success: true, user: userCredential.user };
     } catch (error) {
         console.error("Error Login:", error.code);
-        return { success: false, error: mapAuthError(error.code) };
+
+        // Generic error handling for invalid credentials
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            return { success: false, error: "Credenciales incorrectas (correo o contraseña).", code: 'auth/invalid-credential' };
+        }
+
+        return { success: false, error: mapAuthError(error.code), code: error.code };
     }
 }
 
@@ -59,7 +68,7 @@ export async function loginUser(email, password) {
  * 2. REGISTRAR USUARIO NUEVO
  * Maneja la creación en Auth y el guardado de datos en Firestore.
  */
-export async function registerUser({ name, email, password, isTeacher, storeName }) {
+export async function registerUser({ name, email, password, isTeacher = false, storeName }) {
     try {
         // A. Crear usuario en Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -97,7 +106,7 @@ export async function registerUser({ name, email, password, isTeacher, storeName
 
     } catch (error) {
         console.error("Error Registro:", error.code);
-        return { success: false, error: mapAuthError(error.code) };
+        return { success: false, error: mapAuthError(error.code), code: error.code };
     }
 }
 
@@ -131,7 +140,7 @@ export async function loginWithGoogle() {
 
     } catch (error) {
         console.error("Error Google:", error.code);
-        return { success: false, error: mapAuthError(error.code) };
+        return { success: false, error: mapAuthError(error.code), code: error.code };
     }
 }
 

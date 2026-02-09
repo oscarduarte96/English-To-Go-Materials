@@ -32,9 +32,9 @@ const storage = getStorage(app); // Almacenamiento (Archivos PDF, IMG)
 // 5. Diagnóstico en Consola (Solo para desarrollo)
 // Te ayudará a confirmar visualmente que el "cerebro" cargó correctamente.
 console.log(
-    "%c🔥 FIREBASE CONNECTED%c\n%s", 
-    "background:#4f46e5; color:white; padding:4px 8px; border-radius:4px; font-weight:bold;", 
-    "color:#64748b;", 
+    "%c🔥 FIREBASE CONNECTED%c\n%s",
+    "background:#4f46e5; color:white; padding:4px 8px; border-radius:4px; font-weight:bold;",
+    "color:#64748b;",
     `Project: ${firebaseConfig.projectId} | Services: Auth, DB, Storage`
 );
 

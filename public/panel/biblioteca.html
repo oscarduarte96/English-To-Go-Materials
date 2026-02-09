@@ -34,9 +34,9 @@
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="../assets/css/variables.css">
-    <link rel="stylesheet" href="../assets/css/global.css">
-    <link rel="stylesheet" href="../assets/css/responsive.css">
+    <link rel="stylesheet" href="../assets/css/variables.css?v=3.0">
+    <link rel="stylesheet" href="../assets/css/global.css?v=3.0">
+    <link rel="stylesheet" href="../assets/css/responsive.css?v=3.0">
 
     <style>
         .custom-scroll::-webkit-scrollbar {
@@ -65,10 +65,14 @@
             transform: translateY(-4px);
             box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
         }
+
+        .card-enter {
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
     </style>
 
-    <script type="module" src="../assets/js/components.js"></script>
-    <script type="module" src="./js/guard.js"></script>
+    <script type="module" src="../assets/js/components.js?v=3.0"></script>
+    <script type="module" src="./js/guard.js?v=3.0"></script>
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -149,7 +153,8 @@
             </div>
 
             <!-- Contenedor de Recursos -->
-            <div id="library-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div id="library-container" style="display: grid; width: 100%;"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12 w-full">
                 <!-- Skeleton Loading -->
                 <div class="animate-pulse bg-white rounded-2xl h-64 border border-slate-100 shadow-sm"></div>
                 <div class="animate-pulse bg-white rounded-2xl h-64 border border-slate-100 shadow-sm"></div>
@@ -280,10 +285,10 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="../assets/js/firebase-app.js"></script>
-    <script type="module" src="../assets/js/utils.js"></script>
-    <script type="module" src="./js/biblioteca.js"></script>
-    <script type="module" src="../js/cart.js"></script>
+    <script type="module" src="../assets/js/firebase-app.js?v=3.0"></script>
+    <script type="module" src="../assets/js/utils.js?v=3.0"></script>
+    <script type="module" src="./js/biblioteca.js?v=3.0"></script>
+    <script type="module" src="../js/cart.js?v=3.0"></script>
 
 </body>
 

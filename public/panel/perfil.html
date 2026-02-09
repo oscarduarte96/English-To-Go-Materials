@@ -42,10 +42,10 @@
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="../assets/css/variables.css">
-    <link rel="stylesheet" href="../assets/css/global.css">
-    <link rel="stylesheet" href="../assets/css/responsive.css">
-    <link rel="stylesheet" href="../assets/css/components/product-modal.css">
+    <link rel="stylesheet" href="../assets/css/variables.css?v=3.0">
+    <link rel="stylesheet" href="../assets/css/global.css?v=3.0">
+    <link rel="stylesheet" href="../assets/css/responsive.css?v=3.0">
+    <link rel="stylesheet" href="../assets/css/components/product-modal.css?v=3.0">
 
     <style>
         /* Profile Header Styles */
@@ -112,27 +112,6 @@
             box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
         }
 
-        /* CTA Gradient Animation */
-        .cta-gradient {
-            background: linear-gradient(-45deg, #4f46e5, #06b6d4, #10b981, #4f46e5);
-            background-size: 400% 400%;
-            animation: gradient 8s ease infinite;
-        }
-
-        @keyframes gradient {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
         /* Skill Tags */
         .skill-tag {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
@@ -186,8 +165,10 @@
             z-index: 40;
         }
 
-        #sidebar.collapsed {
-            margin-left: calc(var(--sidebar-width) * -1);
+        @media (min-width: 1024px) {
+            #sidebar.collapsed {
+                margin-left: calc(var(--sidebar-width) * -1);
+            }
         }
 
         #mobileOverlay {
@@ -241,8 +222,8 @@
         }
     </style>
 
-    <script type="module" src="../assets/js/components.js"></script>
-    <script type="module" src="./js/guard.js"></script>
+    <script type="module" src="../assets/js/components.js?v=3.0"></script>
+    <script type="module" src="./js/guard.js?v=3.0"></script>
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -280,13 +261,19 @@
             <!-- CTA for logged-in non-creators -->
             <div id="creatorCta" class="p-4 flex-shrink-0 border-t border-slate-100 bg-slate-50/80 hidden">
                 <div
-                    class="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-4 text-white shadow-lg shadow-indigo-500/20 text-center">
-                    <i class="fa-solid fa-award text-2xl mb-2 opacity-80"></i>
-                    <p class="text-xs font-bold mb-1">¿Eres Docente?</p>
-                    <p class="text-[10px] opacity-80 mb-3">Vende tus materiales aquí</p>
-                    <a href="aplicar-creador.html"
-                        class="block w-full py-2 bg-white text-indigo-600 text-[10px] font-black uppercase rounded-lg hover:bg-indigo-50 transition-colors">Aplicar
-                        Ahora</a>
+                    class="cta-gradient rounded-xl p-4 text-white shadow-lg shadow-indigo-500/20 text-center relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div
+                            class="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fa-solid fa-rocket text-lg"></i>
+                        </div>
+                        <p class="text-xs font-bold mb-1">¿Eres Docente?</p>
+                        <p class="text-[10px] opacity-80 mb-3">Conviértete en Creador</p>
+                        <a href="aplicar-creador.html"
+                            class="block w-full py-2 bg-white text-primary text-[10px] font-black uppercase rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+                            Aplicar Ahora
+                        </a>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -671,10 +658,10 @@
     <app-cart-drawer></app-cart-drawer>
 
     <!-- Scripts -->
-    <script type="module" src="../assets/js/firebase-app.js"></script>
-    <script type="module" src="../assets/js/utils.js"></script>
-    <script type="module" src="../js/cart.js"></script>
-    <script type="module" src="./js/perfil.js"></script>
+    <script type="module" src="../assets/js/firebase-app.js?v=3.0"></script>
+    <script type="module" src="../assets/js/utils.js?v=3.0"></script>
+    <script type="module" src="../js/cart.js?v=3.0"></script>
+    <script type="module" src="./js/perfil.js?v=3.0"></script>
 
 </body>
 

@@ -1,13 +1,13 @@
 /**
  * ============================================================================
- * LÓGICA DEL CARRITO (CART.JS) - FIREBASE EDITION (SECURE & OPTIMIZED)
+ * LÓGICA DEL CARRITO (CART.JS) - FIREBASE EDITION (SECURE & DYNAMIC)
  * ============================================================================
  * Responsabilidad: 
  * 1. Gestionar estado del carrito sincronizado con Firestore.
  * 2. Sincronización en Tiempo Real (Multi-dispositivo).
- * 3. Renderizado del Drawer del carrito.
+ * 3. Renderizado del Drawer del carrito (Cálculo dinámico de descuentos).
  * 4. Procesamiento de Checkout (CON VERIFICACIÓN DE PRECIOS SERVIDOR).
- * 5. Sistema de Cupones y Acceso Gratuito para Estudiantes.
+ * 5. Sistema de Cupones Inteligente (Discrimina productos permitidos/no permitidos).
  * * DEPENDENCIA: Requiere assets/js/utils.js cargado previamente (window.utils)
  */
 
@@ -36,28 +36,23 @@ let unsubscribeCart = null;
 window.appState = window.appState || {};
 window.appState.cart = [];
 window.appState.user = null;
-window.appState.appliedCoupon = null; // { code, discount_percent, discount_amount, docId }
+window.appState.appliedCoupon = null; // { code, discount_percent, docId } -> Ya no guardamos montos fijos aquí
 
 // 3. REFERENCIAS AL DOM
 let ui = {};
 
 /**
- * 5. INICIALIZACIÓN (OPTIMIZADO - SIN RACE CONDITIONS)
+ * 5. INICIALIZACIÓN
  */
 async function init() {
-    // CORRECCIÓN TÉCNICA: Espera nativa a que el Web Component esté definido
     await customElements.whenDefined('app-cart-drawer');
-
-    // Intentamos capturar el elemento una vez que el componente ya "existe" para el navegador
     const drawerElement = document.getElementById('cartDrawer');
 
-    // Validación defensiva final
     if (!drawerElement) {
         console.error("Error crítico: El componente app-cart-drawer se definió pero no renderizó el ID #cartDrawer.");
         return;
     }
 
-    // 2. Capturamos las referencias (incluyendo nuevos elementos de cupón)
     ui = {
         btnClose: document.getElementById('closeCartBtn'),
         overlay: document.getElementById('cartOverlay'),
@@ -66,7 +61,6 @@ async function init() {
         emptyMsg: document.getElementById('emptyCartMsg'),
         totalDisplay: document.getElementById('cartTotalDisplay'),
         btnCheckout: document.getElementById('btnCheckout'),
-        // Nuevos elementos para cupones
         couponInput: document.getElementById('couponInput'),
         btnApplyCoupon: document.getElementById('btnApplyCoupon'),
         couponStatus: document.getElementById('couponStatus'),
@@ -76,7 +70,6 @@ async function init() {
         btnRedeemAccess: document.getElementById('btnRedeemAccess')
     };
 
-    // 3. Procedemos con la configuración
     setupEventListeners();
     setupAuthListener();
 }
@@ -88,11 +81,9 @@ function setupEventListeners() {
     if (ui.overlay) ui.overlay.onclick = closeCart;
     if (ui.btnCheckout) ui.btnCheckout.onclick = handleCheckout;
 
-    // Nuevos eventos para cupones
     if (ui.btnApplyCoupon) ui.btnApplyCoupon.onclick = handleApplyCoupon;
     if (ui.btnRedeemAccess) ui.btnRedeemAccess.onclick = handleZeroCostCheckout;
 
-    // Enter key en input de cupón
     if (ui.couponInput) {
         ui.couponInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -146,16 +137,12 @@ window.addToCart = async (product) => {
 
     if (!user) {
         alert("Para agregar productos al carrito y sincronizarlos entre tus dispositivos, por favor inicia sesión.");
-
-        // Smart Redirect: Save Intent
         const intent = {
             type: 'open_product',
             productId: product.id,
             returnUrl: window.location.href
         };
         sessionStorage.setItem('pending_intent', JSON.stringify(intent));
-
-        // Use 'register' mode to encourage signup, but login is fine too
         window.location.href = '../auth/login.html?mode=register';
         return;
     }
@@ -166,15 +153,19 @@ window.addToCart = async (product) => {
         return;
     }
 
+    // MODIFICADO: Guardamos la propiedad 'allowDiscounts' en el item del carrito
+    // Esto permite que el carrito sepa inmediatamente si el producto acepta cupones.
     const cartItem = {
         id: product.id,
         titulo: product.titulo,
-        precio: Number(product.precio), // Precio visual (no confiable para checkout)
+        precio: Number(product.precio),
         imagen: product.imagenes_preview && product.imagenes_preview.length > 0
             ? product.imagenes_preview[0]
             : null,
         tipo: product.tipo_archivo || 'Digital',
-        autor_id: product._normalizedTeacherId || 'unknown'
+        autor_id: product._normalizedTeacherId || 'unknown',
+        // 🔥 VALIDACIÓN CRÍTICA: Guardamos si permite descuentos (true/false)
+        allowDiscounts: product.allowDiscounts !== false && product.allowDiscounts !== "false"
     };
 
     try {
@@ -220,12 +211,9 @@ async function clearCart() {
 }
 
 /**
- * 6.5 SISTEMA DE CUPONES
+ * 6.5 SISTEMA DE CUPONES (CORREGIDO PARA VALIDACIÓN DINÁMICA)
  */
 
-/**
- * Valida y aplica un cupón de descuento
- */
 async function handleApplyCoupon() {
     const code = ui.couponInput?.value.trim().toUpperCase();
 
@@ -234,12 +222,10 @@ async function handleApplyCoupon() {
         return;
     }
 
-    // UI Loading
     ui.btnApplyCoupon.disabled = true;
     ui.btnApplyCoupon.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
     try {
-        // Buscar cupón en Firestore
         const couponsRef = collection(db, "coupons");
         const q = query(couponsRef, where("code", "==", code));
         const snapshot = await getDocs(q);
@@ -253,14 +239,12 @@ async function handleApplyCoupon() {
         const couponDoc = snapshot.docs[0];
         const couponData = couponDoc.data();
 
-        // Validar si está activo
         if (!couponData.is_active) {
             showCouponStatus('error', '❌ Este cupón ya no está activo.');
             resetCouponButton();
             return;
         }
 
-        // Validar expiración (si aplica)
         if (couponData.valid_until) {
             const expirationDate = couponData.valid_until.toDate();
             if (new Date() > expirationDate) {
@@ -270,35 +254,27 @@ async function handleApplyCoupon() {
             }
         }
 
-        // Validar límite de uso (si aplica)
         if (couponData.usage_limit !== null && couponData.usage_count >= couponData.usage_limit) {
             showCouponStatus('error', '❌ Este cupón ha alcanzado su límite de uso.');
             resetCouponButton();
             return;
         }
 
-        // ✅ Cupón válido - Calcular descuento
-        const cart = window.appState.cart;
-        const subtotal = cart.reduce((sum, item) => sum + item.precio, 0);
-        const discountPercent = couponData.discount_percent || 0;
-        const discountAmount = Math.round(subtotal * (discountPercent / 100));
-
-        // Guardar en estado global
+        // MODIFICADO: Ya no calculamos el descuento fijo aquí.
+        // Solo guardamos la "regla" del cupón. El renderizado calculará a qué aplica.
         window.appState.appliedCoupon = {
             code: code,
             docId: couponDoc.id,
-            discount_percent: discountPercent,
-            discount_amount: discountAmount
+            discount_percent: couponData.discount_percent || 0
         };
 
-        // Mostrar éxito
-        const percentText = discountPercent === 100 ? '¡GRATIS!' : `${discountPercent}% OFF`;
-        showCouponStatus('success', `✅ Cupón "${code}" aplicado. ${percentText}`);
+        // UI Feedback
+        const percentText = couponData.discount_percent === 100 ? '¡GRATIS!' : `${couponData.discount_percent}% OFF`;
+        showCouponStatus('success', `✅ Cupón "${code}" activo. ${percentText} en productos seleccionados.`);
 
-        // Actualizar UI del carrito
-        updateCartUI();
+        updateCartUI(); // Esto disparará el cálculo real
 
-        // Cambiar input a estado "aplicado"
+        // UI Updates
         ui.couponInput.disabled = true;
         ui.couponInput.classList.add('bg-emerald-50', 'border-emerald-300');
         ui.btnApplyCoupon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
@@ -314,13 +290,9 @@ async function handleApplyCoupon() {
     }
 }
 
-/**
- * Elimina el cupón aplicado
- */
 function removeCoupon() {
     window.appState.appliedCoupon = null;
 
-    // Resetear UI
     ui.couponInput.value = '';
     ui.couponInput.disabled = false;
     ui.couponInput.classList.remove('bg-emerald-50', 'border-emerald-300');
@@ -328,13 +300,9 @@ function removeCoupon() {
     resetCouponButton();
     ui.couponStatus.classList.add('hidden');
 
-    // Actualizar totales
     updateCartUI();
 }
 
-/**
- * Resetea el botón de aplicar cupón a su estado original
- */
 function resetCouponButton() {
     if (!ui.btnApplyCoupon) return;
     ui.btnApplyCoupon.disabled = false;
@@ -344,11 +312,6 @@ function resetCouponButton() {
     ui.btnApplyCoupon.onclick = handleApplyCoupon;
 }
 
-/**
- * Muestra mensaje de estado del cupón
- * @param {string} type - 'success' o 'error'
- * @param {string} message - Mensaje a mostrar
- */
 function showCouponStatus(type, message) {
     if (!ui.couponStatus) return;
 
@@ -364,7 +327,7 @@ function showCouponStatus(type, message) {
 }
 
 /**
- * 7. RENDERIZADO UI
+ * 7. RENDERIZADO UI (CÁLCULO DINÁMICO DE TOTALES)
  */
 function updateCartUI() {
     const cart = window.appState.cart;
@@ -386,6 +349,7 @@ function updateCartUI() {
             ui.btnCheckout.disabled = true;
             ui.btnCheckout.classList.add('opacity-50', 'cursor-not-allowed');
         }
+        if (window.appState.appliedCoupon) removeCoupon();
         return;
     }
 
@@ -396,10 +360,22 @@ function updateCartUI() {
     }
 
     ui.itemsContainer.innerHTML = '';
+    
+    // Variables para cálculo dinámico
     let total = 0;
+    let eligibleSubtotal = 0; // Subtotal de productos que SÍ aceptan descuento
 
     cart.forEach(item => {
         total += item.precio;
+
+        // 🔥 LÓGICA DINÁMICA: Chequeamos la propiedad en tiempo real
+        // Si el item no tiene la propiedad definida (items viejos), asumimos true por compatibilidad, 
+        // o false si prefieres ser estricto. Aquí asumimos que si no es explícitamente false, es true.
+        const isEligible = item.allowDiscounts !== false;
+
+        if (isEligible) {
+            eligibleSubtotal += item.precio;
+        }
 
         const div = document.createElement('div');
         div.className = "flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md";
@@ -409,12 +385,20 @@ function updateCartUI() {
             : `<div class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300 text-xl"><i class="fa-solid fa-file"></i></div>`;
 
         const precioFormateado = window.utils ? window.utils.formatCurrency(item.precio) : `$ ${item.precio}`;
+        
+        // Indicador visual si el producto NO aplica para cupón (opcional pero útil)
+        const noDiscountBadge = !isEligible && window.appState.appliedCoupon 
+            ? `<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-2">No Dto.</span>` 
+            : '';
 
         div.innerHTML = `
             ${imgHtml}
             <div class="flex-grow min-w-0">
                 <h4 class="text-xs font-bold text-slate-800 line-clamp-2 leading-snug mb-1">${item.titulo}</h4>
-                <p class="text-indigo-600 font-black text-sm">${precioFormateado}</p>
+                <div class="flex items-center">
+                    <p class="text-indigo-600 font-black text-sm">${precioFormateado}</p>
+                    ${noDiscountBadge}
+                </div>
             </div>
             <button class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all btn-remove" data-id="${item.id}">
                 <i class="fa-solid fa-trash-can text-sm"></i>
@@ -429,20 +413,21 @@ function updateCartUI() {
         ui.itemsContainer.appendChild(div);
     });
 
-    // Calcular descuento si hay cupón aplicado
+    // Calcular montos finales
     const coupon = window.appState.appliedCoupon;
     let discountAmount = 0;
     let finalTotal = total;
 
     if (coupon) {
-        // Recalcular descuento basado en el subtotal actual
-        discountAmount = Math.round(total * (coupon.discount_percent / 100));
+        // El descuento se calcula SOLO sobre el subtotal elegible
+        discountAmount = Math.round(eligibleSubtotal * (coupon.discount_percent / 100));
+        
+        // El total final es el Total Global menos el Descuento calculado
         finalTotal = total - discountAmount;
 
-        // Actualizar el objeto del cupón con el monto actual
+        // Actualizamos el objeto cupón en memoria con el monto actual para uso en checkout
         window.appState.appliedCoupon.discount_amount = discountAmount;
 
-        // Mostrar resumen de descuento
         if (ui.discountSummary) {
             ui.discountSummary.classList.remove('hidden');
             if (ui.subtotalDisplay) {
@@ -451,19 +436,27 @@ function updateCartUI() {
             if (ui.discountDisplay) {
                 ui.discountDisplay.innerText = window.utils ? `-${window.utils.formatCurrency(discountAmount)}` : `-$ ${discountAmount}`;
             }
+            
+            // Si hay productos no elegibles, avisar en el status
+            if (eligibleSubtotal < total && ui.couponStatus) {
+                ui.couponStatus.innerText = `⚠️ Cupón aplicado solo a productos válidos.`;
+                ui.couponStatus.classList.remove('bg-emerald-50', 'text-emerald-700');
+                ui.couponStatus.classList.add('bg-orange-50', 'text-orange-700');
+            } else if (ui.couponStatus) {
+                // Restaurar estilo verde si todo es válido
+                ui.couponStatus.classList.add('bg-emerald-50', 'text-emerald-700');
+                ui.couponStatus.classList.remove('bg-orange-50', 'text-orange-700');
+            }
         }
     } else {
-        // Ocultar resumen de descuento
         if (ui.discountSummary) {
             ui.discountSummary.classList.add('hidden');
         }
     }
 
-    // Mostrar total final
     if (ui.totalDisplay) {
         ui.totalDisplay.innerText = window.utils ? window.utils.formatCurrency(finalTotal) : `$ ${finalTotal}`;
 
-        // Estilo diferente si es gratis
         if (finalTotal === 0 && coupon) {
             ui.totalDisplay.classList.add('text-emerald-600');
             ui.totalDisplay.classList.remove('text-slate-900');
@@ -473,21 +466,15 @@ function updateCartUI() {
         }
     }
 
-    // Transformar botón según el total
     if (finalTotal === 0 && coupon && count > 0) {
-        // Mostrar botón "Canjear Acceso" y ocultar "Finalizar Compra"
         if (ui.btnCheckout) ui.btnCheckout.classList.add('hidden');
         if (ui.btnRedeemAccess) ui.btnRedeemAccess.classList.remove('hidden');
     } else {
-        // Mostrar botón normal de checkout
         if (ui.btnCheckout) ui.btnCheckout.classList.remove('hidden');
         if (ui.btnRedeemAccess) ui.btnRedeemAccess.classList.add('hidden');
     }
 }
 
-/**
- * 8. INTERACCIÓN DEL DRAWER
- */
 function openCart() {
     if (!ui.overlay || !ui.drawer) return;
     ui.overlay.classList.remove('hidden');
@@ -510,7 +497,6 @@ function closeCart() {
  * 9. CHECKOUT SEGURO (Server-Side Price Validation)
  */
 async function handleCheckout() {
-    // A. Verificar Autenticación
     const user = auth.currentUser;
     if (!user) {
         sessionStorage.setItem('redirect_after_login', 'checkout');
@@ -518,30 +504,20 @@ async function handleCheckout() {
         return;
     }
 
-    // B. Obtener items locales solo para referencias de IDs
     const localCart = window.appState.cart;
     if (localCart.length === 0) return;
 
-    // UI Loading
     ui.btnCheckout.disabled = true;
     ui.btnCheckout.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando precios...';
 
     try {
-        // --- CORRECCIÓN DE SEGURIDAD ---
-        // 1. No confiamos en el precio del carrito local.
-        // 2. Buscamos el precio actual en la colección 'products'.
-
         let verifiedTotal = 0;
         const verifiedItems = [];
         const missingItems = [];
 
-        // Creamos un array de promesas para buscar todos los productos en paralelo
         const productPromises = localCart.map(item => getDoc(doc(db, "products", item.id)));
-
-        // Ejecutamos las consultas
         const snapshots = await Promise.all(productPromises);
 
-        // Procesamos resultados
         snapshots.forEach((snap, index) => {
             if (snap.exists()) {
                 const productData = snap.data();
@@ -549,51 +525,62 @@ async function handleCheckout() {
 
                 verifiedTotal += realPrice;
 
-                // Reconstruimos el item con el precio REAL de la base de datos
                 verifiedItems.push({
-                    ...localCart[index], // Mantenemos metadatos UI (titulo, imagen)
-                    precio: realPrice,   // SOBREESCRIBIMOS el precio con el dato seguro
+                    ...localCart[index], 
+                    precio: realPrice,
                     verified_at: new Date().toISOString()
                 });
             } else {
-                // Producto ya no existe en DB
                 missingItems.push(localCart[index].titulo);
             }
         });
 
-        // Validación: Si faltan productos críticos
         if (missingItems.length > 0) {
             alert(`Atención: Algunos productos ya no están disponibles y fueron removidos de la orden: \n- ${missingItems.join('\n- ')}`);
-            // Aquí podríamos actualizar el carrito local para reflejar esto, 
-            // pero por ahora procedemos con los que sí existen si el usuario acepta (o abortamos).
-            // Estrategia: Abortar para que el usuario revise.
             ui.btnCheckout.disabled = false;
             ui.btnCheckout.innerHTML = '<span>Finalizar Compra</span> <i class="fa-solid fa-arrow-right"></i>';
-            return; // Detenemos el checkout
+            return;
         }
 
         if (verifiedItems.length === 0) {
             throw new Error("No hay productos válidos para procesar.");
         }
 
-        console.log(`Checkout Verificado: Total Local $${localCart.reduce((a, b) => a + b.precio, 0)} vs Total DB $${verifiedTotal}`);
-
-        // C. Aplicar descuento si hay cupón
+        // C. Aplicar descuento si hay cupón (CON VALIDACIÓN DE ELEGIBILIDAD DEL SERVIDOR)
         const coupon = window.appState.appliedCoupon;
         let discountAmount = 0;
         let finalTotal = verifiedTotal;
 
         if (coupon) {
-            discountAmount = Math.round(verifiedTotal * (coupon.discount_percent / 100));
+            let eligibleCurrentTotal = 0;
+
+            // Recorremos los items verificados para sumar solo los elegibles
+            // Usando los datos FRESCOS de la base de datos (snapshots)
+            verifiedItems.forEach((item, index) => {
+                const snap = snapshots[index];
+                if (snap.exists()) {
+                    const prod = snap.data();
+                    // Validación estricta usando datos del servidor
+                    const isDiscountsAllowed = prod.allowDiscounts !== false && prod.allowDiscounts !== "false";
+                    
+                    if (isDiscountsAllowed) {
+                        eligibleCurrentTotal += item.precio;
+                    }
+                }
+            });
+
+            discountAmount = Math.round(eligibleCurrentTotal * (coupon.discount_percent / 100));
             finalTotal = verifiedTotal - discountAmount;
         }
 
-        // D. Construir Objeto de Orden Seguro
+        const authorIds = [...new Set(verifiedItems.map(item => item.autor_id).filter(id => id && id !== 'unknown'))];
+
         const orderData = {
             user_id: user.uid,
             user_email: user.email,
             user_name: user.displayName || "Usuario",
             items: verifiedItems,
+            author_ids: authorIds, 
             original_total: verifiedTotal,
             discount_amount: discountAmount,
             final_total: finalTotal,
@@ -606,16 +593,12 @@ async function handleCheckout() {
             platform: 'web_catalog_v2'
         };
 
-        // E. Guardar en Firestore
         const docRef = await addDoc(collection(db, "orders"), orderData);
-        console.log("Orden creada con ID: ", docRef.id);
-
-        // F. Limpiar cupón y carrito
+        
         window.appState.appliedCoupon = null;
         await clearCart();
         closeCart();
 
-        // Redirigir al Checkout de Micro-pagos (vía Bre-B / Manual)
         window.location.href = `../checkout.html?order_id=${docRef.id}`;
 
     } catch (error) {
@@ -630,11 +613,9 @@ async function handleCheckout() {
 }
 
 /**
- * 10. CHECKOUT COSTO CERO (Para Estudiantes con Cupón 100%)
- * Omite la pasarela de pago y registra la orden como completada directamente.
+ * 10. CHECKOUT COSTO CERO
  */
 async function handleZeroCostCheckout() {
-    // A. Verificar Autenticación
     const user = auth.currentUser;
     if (!user) {
         sessionStorage.setItem('redirect_after_login', 'checkout');
@@ -642,7 +623,6 @@ async function handleZeroCostCheckout() {
         return;
     }
 
-    // B. Verificar que hay un cupón 100% aplicado
     const coupon = window.appState.appliedCoupon;
     if (!coupon || coupon.discount_percent !== 100) {
         alert("Error: Este flujo solo es válido con un cupón de 100% de descuento.");
@@ -652,12 +632,10 @@ async function handleZeroCostCheckout() {
     const localCart = window.appState.cart;
     if (localCart.length === 0) return;
 
-    // UI Loading
     ui.btnRedeemAccess.disabled = true;
     ui.btnRedeemAccess.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando acceso...';
 
     try {
-        // C. Verificar precios en servidor (igual que checkout normal)
         let verifiedTotal = 0;
         const verifiedItems = [];
 
@@ -682,18 +660,46 @@ async function handleZeroCostCheckout() {
             throw new Error("No hay productos válidos para procesar.");
         }
 
-        // D. Crear orden como COMPLETADA (sin pasarela de pago)
+        // Recalcular Totales con Elegibilidad (Servidor)
+        let eligibleTotal = 0;
+        snapshots.forEach((snap, index) => {
+            if (snap.exists()) {
+                const prod = snap.data();
+                const isDiscountsAllowed = prod.allowDiscounts !== false && prod.allowDiscounts !== "false";
+                
+                if (isDiscountsAllowed) {
+                    eligibleTotal += verifiedItems[index].precio;
+                }
+            }
+        });
+
+        // Calcular descuento real
+        const discountAmount = Math.round(eligibleTotal * (coupon.discount_percent / 100));
+        const finalTotal = verifiedTotal - discountAmount;
+
+        // VERIFICACIÓN CRÍTICA
+        if (finalTotal > 0) {
+            alert(`Este cupón no cubre la totalidad del carrito porque algunos productos no admiten descuentos.\n\nTotal a pagar: $ ${finalTotal}\n\nSerás redirigido al checkout normal.`);
+            ui.btnRedeemAccess.disabled = false;
+            ui.btnRedeemAccess.innerHTML = '<i class="fa-solid fa-gift"></i> <span>Canjear Acceso Ahora</span>';
+            handleCheckout();
+            return;
+        }
+
+        const authorIds = [...new Set(verifiedItems.map(item => item.autor_id).filter(id => id && id !== 'unknown'))];
+
         const orderData = {
             user_id: user.uid,
             user_email: user.email,
             user_name: user.displayName || "Usuario",
             items: verifiedItems,
+            author_ids: authorIds, 
             original_total: verifiedTotal,
-            discount_amount: verifiedTotal, // 100% de descuento
+            discount_amount: discountAmount,
             final_total: 0,
             currency: 'COP',
-            status: 'completed', // ✅ Directamente completada
-            payment_method: 'coupon_redemption', // Método especial
+            status: 'completed',
+            payment_method: 'coupon_redemption',
             coupon_code: coupon.code,
             coupon_discount_percent: 100,
             redeemed_at: serverTimestamp(),
@@ -704,26 +710,22 @@ async function handleZeroCostCheckout() {
         const docRef = await addDoc(collection(db, "orders"), orderData);
         console.log("🎁 Acceso canjeado con ID: ", docRef.id);
 
-        // E. Incrementar contador de uso del cupón
         if (coupon.docId) {
             try {
                 const couponRef = doc(db, "coupons", coupon.docId);
                 await updateDoc(couponRef, {
                     usage_count: increment(1)
                 });
-                console.log("Contador de cupón incrementado.");
             } catch (e) {
                 console.warn("No se pudo incrementar contador de cupón:", e);
             }
         }
 
-        // F. Limpiar estado
         window.appState.appliedCoupon = null;
-        removeCoupon(); // Resetear UI del cupón
+        removeCoupon();
         await clearCart();
         closeCart();
 
-        // G. Feedback especial para estudiantes
         alert("🎉 ¡Acceso Canjeado Exitosamente!\n\nTus materiales ya están disponibles en tu biblioteca. ¡Disfruta aprendiendo!");
         window.location.href = '../panel/biblioteca.html';
 

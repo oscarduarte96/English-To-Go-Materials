@@ -7,7 +7,9 @@
 @import './variables.css';
 
 /* --- 1. Reset & Base --- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -20,12 +22,13 @@ body {
     font-size: 16px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    
+
     /* Fondo Global (Sutil degradado extraído de tu Login/Index) */
-    background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%), 
+    background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.03) 0px, transparent 50%);
-    background-attachment: fixed; /* Para que el fondo no se mueva al scrollear */
+    background-attachment: fixed;
+    /* Para que el fondo no se mueva al scrollear */
 }
 
 a {
@@ -105,7 +108,7 @@ ul {
 }
 
 .btn-ghost:hover {
-    background-color: rgba(0,0,0,0.05);
+    background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-main);
 }
 
@@ -138,7 +141,8 @@ ul {
 
 .input-field:focus {
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); /* Indigo Ring */
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    /* Indigo Ring */
 }
 
 /* --- 5. Efectos Visuales (Glass & Cards) --- */
@@ -163,13 +167,16 @@ ul {
     width: 6px;
     height: 6px;
 }
+
 .custom-scroll::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .custom-scroll::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 10px;
 }
+
 .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
@@ -190,16 +197,37 @@ ul {
 }
 
 /* Variantes de Badges usando Variables */
-.badge-pdf { background: linear-gradient(135deg, var(--badge-pdf-start), var(--badge-pdf-end)); }
-.badge-ppt { background: linear-gradient(135deg, var(--badge-ppt-start), var(--badge-ppt-end)); }
-.badge-doc { background: linear-gradient(135deg, var(--badge-doc-start), var(--badge-doc-end)); }
-.badge-zip { background: linear-gradient(135deg, var(--badge-zip-start), var(--badge-zip-end)); }
-.badge-img { background: linear-gradient(135deg, var(--badge-img-start), var(--badge-img-end)); }
+.badge-pdf {
+    background: linear-gradient(135deg, var(--badge-pdf-start), var(--badge-pdf-end));
+}
+
+.badge-ppt {
+    background: linear-gradient(135deg, var(--badge-ppt-start), var(--badge-ppt-end));
+}
+
+.badge-doc {
+    background: linear-gradient(135deg, var(--badge-doc-start), var(--badge-doc-end));
+}
+
+.badge-zip {
+    background: linear-gradient(135deg, var(--badge-zip-start), var(--badge-zip-end));
+}
+
+.badge-img {
+    background: linear-gradient(135deg, var(--badge-img-start), var(--badge-img-end));
+}
 
 /* --- 8. Animaciones Globales --- */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in {
@@ -207,9 +235,17 @@ ul {
 }
 
 /* --- 9. Layout Helpers --- */
-.block { display: block; }
-.flex { display: flex; }
-.relative { position: relative; }
+.block {
+    display: block;
+}
+
+.flex {
+    display: flex;
+}
+
+.relative {
+    position: relative;
+}
 
 /* Lógica de ocultamiento por CSS (Más rápida y segura que JS) */
 
@@ -221,4 +257,25 @@ app-header[no-sidebar] #header-sidebar-toggle {
 /* Si app-header tiene el atributo no-cart, oculta el botón del carrito */
 app-header[no-cart] #header-cart-btn {
     display: none !important;
+}
+
+/* --- 10. Shared Banner Styles (Ported from Perfil) --- */
+.cta-gradient {
+    background: linear-gradient(-45deg, #4f46e5, #06b6d4, #10b981, #4f46e5);
+    background-size: 400% 400%;
+    animation: gradient 8s ease infinite;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }

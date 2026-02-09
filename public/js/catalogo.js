@@ -201,18 +201,15 @@ function setupEvents() {
     if (ui.mobileOverlay) ui.mobileOverlay.onclick = () => toggleSidebar(false);
 
     window.addEventListener('toggle-search', () => {
-        const isCurrentlyHidden = ui.searchContainer.classList.contains('hidden') ||
-            ui.searchContainer.classList.contains('mobile-hidden');
+        const isCurrentlyHidden = !ui.searchContainer.classList.contains('search-open');
 
         if (isCurrentlyHidden) {
-            // Show on mobile
-            ui.searchContainer.classList.remove('hidden', 'mobile-hidden');
-            ui.searchContainer.classList.add('block');
-            ui.searchInput.focus();
+            // Show search (slide down with transition)
+            ui.searchContainer.classList.add('search-open');
+            setTimeout(() => ui.searchInput.focus(), 100);
         } else {
-            // Hide on mobile
-            ui.searchContainer.classList.add('mobile-hidden');
-            ui.searchContainer.classList.remove('block');
+            // Hide search (slide up with transition)
+            ui.searchContainer.classList.remove('search-open');
         }
     });
 
@@ -459,48 +456,48 @@ function renderGrid() {
             <!-- Image Section -->
             <div class="relative h-56 w-full overflow-hidden bg-slate-100">
                 ${imgHTML}
-                <div class="absolute top-3 right-3 z-10 flex gap-2">
-                    ${p.es_gratis ? `<span class="file-badge-free text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-2 tracking-wider shadow-lg"><i class="fa-solid fa-gift"></i> GRATIS</span>` : ''}
-                    <span class="${meta.class} text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-2 tracking-wider shadow-lg">${meta.icon} ${meta.label}</span>
+                <div class="absolute top-2 right-2 z-10 flex gap-1">
+                    ${p.es_gratis ? `<span class="file-badge-free text-[9px] font-black px-2 py-1 rounded-md flex items-center gap-1 tracking-wider shadow-md"><i class="fa-solid fa-gift"></i> GRATIS</span>` : ''}
+                    <span class="${meta.class} text-[9px] font-black px-2 py-1 rounded-md flex items-center gap-1 tracking-wider shadow-md">${meta.icon} ${meta.label}</span>
                 </div>
             </div>
             
             <!-- Gradient Bar -->
-            <div class="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
+            <div class="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
             
             <!-- Content Section with Flexbox -->
-            <div class="flex flex-col flex-grow p-5">
+            <div class="flex flex-col flex-grow p-3">
                 <!-- Title & Tags -->
-                <h3 class="font-bold text-slate-800 leading-snug mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2 text-base">${p.titulo}</h3>
-                <div class="mb-4 flex flex-wrap gap-1">${tagsHTML}</div>
+                <h3 class="font-bold text-slate-800 leading-tight mb-1 group-hover:text-indigo-600 transition-colors line-clamp-2 text-sm">${p.titulo}</h3>
+                <div class="mb-2 flex flex-wrap gap-1">${tagsHTML}</div>
                 
                 <!-- Spacer to push content to bottom -->
                 <div class="flex-grow"></div>
                 
-                <!-- Teacher Info -->
-                <div class="border-t border-slate-100 pt-4">
-                    <div class="flex flex-col gap-1 mb-3">
-                        <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Creado por</span>
-                        <div class="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded-lg p-1 -ml-1 transition-colors relative z-20" id="creator-link-${p.id}">
-                            <img src="${p.creador_foto || 'https://i.imgur.com/O1F7GGy.png'}" class="w-6 h-6 rounded-full object-cover border border-slate-200">
-                            <span class="text-xs text-slate-700 font-bold truncate hover:text-indigo-600">${teacherName}</span>
-                        </div>
+                <!-- Teacher Info & Price -->
+                <div class="border-t border-slate-100 pt-2 mt-1">
+                    <!-- Compact Creator Info -->
+                    <div class="flex items-center gap-2 mb-2 cursor-pointer hover:bg-slate-50 rounded-lg p-0.5 -ml-0.5 transition-colors w-fit" id="creator-link-${p.id}">
+                        <img src="${p.creador_foto || 'https://i.imgur.com/O1F7GGy.png'}" class="w-5 h-5 rounded-full object-cover border border-slate-200">
+                        <span class="text-[10px] text-slate-500">Por <span class="font-bold text-slate-700 hover:text-indigo-600 truncate max-w-[150px] inline-block align-bottom">${teacherName}</span></span>
                     </div>
                     
-                    <!-- Action Bar (Responsive Grid/Flex) -->
-                    <div class="flex flex-wrap items-center gap-2 pt-2 lg:grid lg:grid-cols-[1fr_auto] lg:gap-x-0 lg:gap-y-3 lg:pt-0">
-                        <!-- Price: Left on Mobile, Top-Left on Desktop -->
-                        <span class="text-base md:text-lg font-black ${p.es_gratis ? 'text-emerald-600' : 'text-slate-900'} tracking-tight leading-tight mr-auto lg:mr-0 lg:col-start-1 lg:row-start-1" title="${price}">${price}</span>
+                    <!-- Action Bar (Compact Grid/Flex) -->
+                    <div class="flex items-center gap-2 justify-between">
+                        <!-- Price -->
+                        <span class="text-sm sm:text-base font-black ${p.es_gratis ? 'text-emerald-600' : 'text-slate-900'} tracking-tight leading-none" title="${price}">${price}</span>
                         
-                        <!-- Share: Right next to Add on Mobile, Top-Right on Desktop -->
-                        <button id="${shareBtnId}" class="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors lg:col-start-2 lg:row-start-1 lg:justify-self-end" title="Compartir">
-                            <i class="fa-solid fa-share-nodes"></i>
-                        </button>
-                        
-                        <!-- Add: Right on Mobile, Full Width Bottom on Desktop -->
-                        <button id="${addBtnId}" class="h-9 px-4 flex-shrink-0 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-md active:scale-95 btn-quick-add whitespace-nowrap lg:col-span-2 lg:row-start-2 lg:w-full lg:h-10 lg:text-sm lg:rounded-xl">
-                            <i class="fa-solid fa-cart-shopping"></i> <span>Agregar</span>
-                        </button>
+                        <div class="flex items-center gap-1">
+                             <!-- Share -->
+                            <button id="${shareBtnId}" class="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Compartir">
+                                <i class="fa-solid fa-share-nodes text-xs"></i>
+                            </button>
+                            
+                            <!-- Add -->
+                            <button id="${addBtnId}" class="h-7 px-3 flex-shrink-0 rounded-lg bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-indigo-600 transition-all shadow-sm active:scale-95 btn-quick-add whitespace-nowrap">
+                                <i class="fa-solid fa-cart-shopping"></i> <span>Agregar</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -569,6 +566,9 @@ function getCartButtonState(productId) {
 function updateButtonState(btnElement, productId) {
     if (!btnElement) return;
     const state = getCartButtonState(productId);
+    const isGrid = btnElement.classList.contains('btn-quick-add');
+    const heightClass = isGrid ? 'h-7' : 'h-14'; // Grid compact vs Modal larger
+    const minHeightClass = isGrid ? 'min-h-[28px]' : 'min-h-[56px]';
 
     // 0. Mirar SI YA FUE COMPRADO (Prioridad Máxima)
     if (localState.purchasedProductIds.has(productId)) {
@@ -577,10 +577,14 @@ function updateButtonState(btnElement, productId) {
         btnElement.classList.remove('bg-emerald-600', 'text-white', 'hover:bg-emerald-700', 'shadow-emerald-200', 'text-slate-900', 'bg-slate-900', 'hover:bg-indigo-600');
 
         // Mobile Layout Fix: Full width, auto height to prevent overflow
-        btnElement.classList.remove('h-9', 'whitespace-nowrap');
-        btnElement.classList.add('bg-indigo-50', 'text-indigo-600', 'border', 'border-indigo-200', 'cursor-pointer', 'w-full', 'h-auto', 'py-2', 'min-h-[36px]');
+        btnElement.classList.remove('h-9', 'h-7', 'h-11', 'whitespace-nowrap');
+        btnElement.classList.add('bg-indigo-50', 'text-indigo-600', 'border', 'border-indigo-200', 'cursor-pointer', 'w-full', 'h-auto', isGrid ? 'py-1' : 'py-3', minHeightClass);
 
-        btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-xs sm:text-sm">Adquirido • Ver en Biblioteca</span>`;
+        if (isGrid) {
+            btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-[10px]">Biblioteca</span>`;
+        } else {
+            btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-xs sm:text-sm">Adquirido • Ver en Biblioteca</span>`;
+        }
 
         // Cambiar acción al hacer click para ir a la biblioteca
         btnElement.onclick = (e) => {
@@ -592,8 +596,8 @@ function updateButtonState(btnElement, productId) {
     }
 
     // Reset styles for non-purchased states (restore standard shape)
-    btnElement.classList.add('h-9', 'whitespace-nowrap');
-    btnElement.classList.remove('w-full', 'h-auto', 'py-2', 'min-h-[36px]');
+    btnElement.classList.add(heightClass, 'whitespace-nowrap');
+    btnElement.classList.remove('w-full', 'h-auto', 'py-2', 'py-1', 'py-3', 'min-h-[36px]', 'min-h-[28px]', 'min-h-[44px]');
 
     // 1. Mirar si es GRATIS
     const product = localState.allProducts.find(p => p.id === productId);
@@ -904,7 +908,10 @@ async function fetchTeachers() {
         });
 
         console.log(`[Teachers] Cached ${localState.allTeachers.length} teachers for search`);
-    } catch (e) { console.error("Error fetching teachers:", e); }
+    } catch (e) {
+        console.error("[CRITICAL] Error fetching teachers. Check Firestore Rules or Network:", e);
+        ui.teachersList.innerHTML = '<div class="p-4 text-red-500 text-xs">Error cargando profesores.</div>';
+    }
 }
 
 function selectTeacher(id) {

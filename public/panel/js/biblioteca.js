@@ -236,7 +236,7 @@ function renderLibrary() {
         const isFav = favorites.has(res.id);
         const card = document.createElement('div');
         // Usamos la misma estructura base de tarjeta del catálogo
-        card.className = "w-full min-w-[280px] bg-white rounded-2xl shadow-xl border border-slate-200 group flex flex-col h-full hover:-translate-y-2 transition-all duration-300 overflow-hidden relative cursor-pointer";
+        card.className = "card-enter w-full min-w-[280px] max-w-[400px] sm:max-w-none justify-self-stretch bg-white rounded-2xl shadow-xl border border-slate-200 group flex flex-col h-full cursor-pointer hover:-translate-y-2 transition-all duration-300 overflow-hidden";
 
         // Click en tarjeta abre modal
         card.onclick = () => openProductModal(res);
@@ -266,55 +266,61 @@ function renderLibrary() {
             <div class="relative h-56 w-full overflow-hidden bg-slate-100">
                 <img src="${res.imagen}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" loading="lazy" alt="${res.titulo}">
                 
-                <div class="absolute top-3 right-3 z-10 flex gap-2">
-                    <span class="${meta.class} text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-2 tracking-wider shadow-lg">
+                <div class="absolute top-2 right-2 z-10 flex gap-1">
+                    <span class="${meta.class} text-[9px] font-black px-2 py-1 rounded-md flex items-center gap-1 tracking-wider shadow-md">
                         ${meta.icon} ${meta.label}
                     </span>
                 </div>
 
-                <!-- Botón Favorito Flotante (Integrado estilo catálogo pero a la izquierda) -->
-                <button class="fav-btn absolute top-3 left-3 w-9 h-9 rounded-full flex items-center justify-center bg-white/90 backdrop-blur-sm shadow-md border border-white/50 transition-all hover:scale-110 ${isFav ? 'text-danger' : 'text-slate-400 hover:text-danger'}" 
+                <!-- Botón Favorito Flotante (Maintain functionality but style it slightly smaller/nicer if needed, or keep as is) -->
+                <!-- The catalog doesn't have a fav button on card, but library does. We'll keep it but make it subtle. -->
+                 <button class="fav-btn absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center bg-white/90 backdrop-blur-sm shadow-md border border-white/50 transition-all hover:scale-110 ${isFav ? 'text-danger' : 'text-slate-400 hover:text-danger'}" 
                         title="${isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}">
-                    <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart text-base"></i>
+                    <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart text-xs"></i>
                 </button>
             </div>
             
             <!-- Gradient Bar -->
-            <div class="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
+            <div class="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
             
-            <!-- Content Section -->
-            <div class="flex flex-col flex-grow p-5">
+            <!-- Content Section with Flexbox (Matches Catalogue p-3) -->
+            <div class="flex flex-col flex-grow p-3">
                 <!-- Title & Tags -->
-                <h3 class="font-bold text-slate-800 leading-snug mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2 text-base" title="${res.titulo}">
+                <h3 class="font-bold text-slate-800 leading-tight mb-1 group-hover:text-indigo-600 transition-colors line-clamp-2 text-sm" title="${res.titulo}">
                     ${res.titulo}
                 </h3>
-                <div class="mb-4 flex flex-wrap gap-1">${tagsHTML}</div>
+                <div class="mb-2 flex flex-wrap gap-1">${tagsHTML}</div>
                 
-                <!-- Spacer -->
+                <!-- Spacer to push content to bottom -->
                 <div class="flex-grow"></div>
                 
                 <!-- Teacher Info & Actions -->
-                <div class="border-t border-slate-100 pt-4">
-                    <div class="flex flex-col gap-1 mb-3">
-                        <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Creado por</span>
-                        <div class="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded-lg p-1 -ml-1 transition-colors relative z-20" id="library-creator-${res.id}">
-                            <img src="${teacherImg}" class="w-6 h-6 rounded-full object-cover border border-slate-200">
-                            <span class="text-xs text-slate-700 font-bold truncate hover:text-indigo-600">${res.autor}</span>
-                        </div>
+                <div class="border-t border-slate-100 pt-2 mt-1">
+                    <!-- Compact Creator Info -->
+                     <div class="flex items-center gap-2 mb-2 cursor-pointer hover:bg-slate-50 rounded-lg p-0.5 -ml-0.5 transition-colors w-fit" id="library-creator-${res.id}">
+                        <img src="${teacherImg}" class="w-5 h-5 rounded-full object-cover border border-slate-200">
+                        <span class="text-[10px] text-slate-500">Por <span class="font-bold text-slate-700 hover:text-indigo-600 truncate max-w-[150px] inline-block align-bottom">${res.autor}</span></span>
                     </div>
                     
-                    <!-- Action Bar -->
-                    <div class="flex items-center gap-2 pt-2">
-                        <!-- Botón Compartir -->
-                        <button class="share-btn w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border border-slate-100" title="Compartir">
-                            <i class="fa-solid fa-share-nodes"></i>
-                        </button>
+                    <!-- Action Bar (Compact Grid/Flex) -->
+                    <div class="flex items-center gap-2 justify-between">
+                        <!-- Status/Type instead of Price -->
+                        <span class="text-xs font-bold text-emerald-600 tracking-tight leading-none">
+                            <i class="fa-solid fa-check-circle"></i> Adquirido
+                        </span>
                         
-                        <!-- Botón Principal (Descargar/Acceder) -->
-                        <a href="${res.url}" target="_blank" 
-                           class="download-btn flex-grow h-10 px-4 rounded-xl ${primaryBtnColor} text-white text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-indigo-200 active:scale-95 no-underline">
-                            <i class="fa-solid ${btnIcon}"></i> <span>${btnText}</span>
-                        </a>
+                        <div class="flex items-center gap-1">
+                             <!-- Share -->
+                            <button class="share-btn w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Compartir">
+                                <i class="fa-solid fa-share-nodes text-xs"></i>
+                            </button>
+                            
+                            <!-- Download/Access (Styled like 'Add' button but adapted) -->
+                            <a href="${res.url}" target="_blank" 
+                               class="download-btn h-7 px-3 flex-shrink-0 rounded-lg ${primaryBtnColor} text-white text-[10px] font-bold flex items-center justify-center gap-1 hover:brightness-110 transition-all shadow-sm active:scale-95 whitespace-nowrap no-underline">
+                                <i class="fa-solid ${btnIcon}"></i> <span>${isUrl ? 'Acceder' : 'Descargar'}</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -7,11 +7,15 @@ import { auth } from "../../assets/js/firebase-app.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
 // --- EmailJS Configuration ---
+// --- EmailJS Configuration ---
 // IMPORTANT: Replace these with your own EmailJS credentials.
-// Sign up at: https://www.emailjs.com/ (Free Tier: 200 emails/month)
-const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Replace with your Public Key
-const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Replace with your Service ID
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Replace with your Template ID
+// 1. Go to https://www.emailjs.com/ and create an account.
+// 2. Create a new Email Service (e.g., Gmail) -> Get Service ID.
+// 3. Create a new Email Template -> Get Template ID.
+// 4. Go to Account > API Keys -> Get Public Key.
+const EMAILJS_PUBLIC_KEY = 'aaXgY6L70Q9AXKM4e';
+const EMAILJS_SERVICE_ID = 'service_t56qt3w';
+const EMAILJS_TEMPLATE_ID = 'template_lyr4cag';
 const ADMIN_EMAIL = 'hola.englishtogo@gmail.com';
 
 // --- DOM Elements ---
@@ -69,27 +73,21 @@ if (form) {
         btnSubmit.disabled = true;
 
         try {
-            // 3. Initialize EmailJS if not already
-            if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+            // 3. Initialize EmailJS
+            if (typeof emailjs !== 'undefined') {
                 emailjs.init(EMAILJS_PUBLIC_KEY);
 
                 // 4. Send email via EmailJS
                 await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, formData);
 
                 // 5. Success!
-                showStatus('success', '¡Solicitud enviada! Tu solicitud está siendo revisada por nuestro equipo pedagógico. Te contactaremos en 24-48 horas.');
+                showStatus('success', 'Tu solicitud ha sido enviada');
                 form.reset();
                 charCountSpan.textContent = '0';
 
             } else {
-                // Fallback: Log to console (for development/testing)
-                console.log('--- CREATOR APPLICATION SUBMITTED ---');
-                console.log('Form Data:', formData);
-                console.log('EmailJS not configured. To enable email, set your EmailJS credentials in aplicar-creador.js.');
-
-                showStatus('success', '¡Solicitud enviada! Tu solicitud está siendo revisada por nuestro equipo pedagógico. Te contactaremos en 24-48 horas.');
-                form.reset();
-                charCountSpan.textContent = '0';
+                console.error('EmailJS SDK not loaded.');
+                showStatus('error', 'Error interno: No se pudo cargar el servicio de correo.');
             }
 
         } catch (error) {

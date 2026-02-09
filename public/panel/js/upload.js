@@ -225,8 +225,12 @@ if (productFileInput && productFileName) {
 // ==========================================
 // TOGGLE: GRATIS VS PAGO
 // ==========================================
+// ==========================================
+// TOGGLE: GRATIS VS PAGO
+// ==========================================
 const isFreeCheckbox = document.getElementById('isFree');
 const priceInput = document.getElementById('price');
+const allowDiscountsCheckbox = document.getElementById('allowDiscounts');
 
 if (isFreeCheckbox && priceInput) {
     isFreeCheckbox.addEventListener('change', (e) => {
@@ -236,6 +240,12 @@ if (isFreeCheckbox && priceInput) {
             priceInput.disabled = true;
             priceInput.classList.add('bg-slate-100', 'text-slate-400');
             priceInput.classList.remove('bg-white', 'text-slate-900');
+
+            // Deshabilitar descuentos si es gratis
+            if (allowDiscountsCheckbox) {
+                allowDiscountsCheckbox.checked = false;
+                allowDiscountsCheckbox.disabled = true;
+            }
         } else {
             // Modo Pago
             priceInput.value = '';
@@ -243,6 +253,11 @@ if (isFreeCheckbox && priceInput) {
             priceInput.classList.remove('bg-slate-100', 'text-slate-400');
             priceInput.classList.add('bg-white', 'text-slate-900');
             priceInput.focus();
+
+            // Habilitar descuentos
+            if (allowDiscountsCheckbox) {
+                allowDiscountsCheckbox.disabled = false;
+            }
         }
     });
 }
@@ -575,6 +590,8 @@ if (form && status && btnSubmit) {
                 titulo: title,
                 precio: Number(price),
                 es_gratis: isFree, // 🔥 NUEVO: Flag de gratuidad
+                /* 🔥 NUEVO: Flag de descuentos */
+                allowDiscounts: document.getElementById('allowDiscounts')?.checked || false,
                 descripcion: description,
                 fecha_creacion: serverTimestamp(),
 

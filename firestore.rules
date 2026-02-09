@@ -12,9 +12,33 @@ service cloud.firestore {
       allow write: if false; // Admin only
     }
 
+    // Coupons - Public Read for Validation
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if false; // Admin only (Modified for Production Security)
+    }
+
     // User Private Data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if (request.auth != null && request.auth.uid == userId) || (resource.data.roles.teacher == true);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Orders - Allow Create & Read for Auth Users
+    match /orders/{orderId} {
+      allow create: if request.auth != null; // Checkout needs to create orders
+      // Optimized Rule: Buyer OR Author (via author_ids array)
+      allow read: if request.auth != null && (
+        resource.data.user_id == request.auth.uid || 
+        (resource.data.author_ids is list && request.auth.uid in resource.data.author_ids)
+      );
+      allow update: if request.auth != null && resource.data.user_id == request.auth.uid; // Optional: if user needs to update order status
+    }
+
+    // Validation Requests
+    match /solicitudes_validacion/{requestId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
     // Default Deny

@@ -78,53 +78,66 @@ function init() {
 // CARGA DE DATOS
 // ============================================================================
 async function loadPortfolioData() {
+    // Flag to track partial failures
+    let productsLoaded = false;
+
     try {
         console.log("Cargando portafolio para:", currentUser.uid);
 
-        // 1. Fetch Products by Creator
-        // NOTA: No usamos orderBy("created_at") aquí para evitar requerir un índice compuesto
-        // inmediato en Firestore. Ordenamos en el cliente.
-        const productsQuery = query(
-            collection(db, "products"),
-            where("creador_uid", "==", currentUser.uid)
-        );
-        const productsSnapshot = await getDocs(productsQuery);
+        // 1. Fetch Products (Should always work - Public Rule)
+        try {
+            const productsQuery = query(
+                collection(db, "products"),
+                where("creador_uid", "==", currentUser.uid)
+            );
+            const productsSnapshot = await getDocs(productsQuery);
+            console.log(`Encontrados ${productsSnapshot.size} productos.`);
 
-        console.log(`Encontrados ${productsSnapshot.size} productos.`);
+            allProducts = [];
+            productsSnapshot.forEach(docSnap => {
+                allProducts.push({ id: docSnap.id, ...docSnap.data() });
+            });
 
-        allProducts = [];
-        productsSnapshot.forEach(docSnap => {
-            allProducts.push({ id: docSnap.id, ...docSnap.data() });
-        });
+            // Ordenamiento Cliente
+            allProducts.sort((a, b) => {
+                const dateA = a.fecha_creacion ? (a.fecha_creacion.toMillis ? a.fecha_creacion.toMillis() : new Date(a.fecha_creacion).getTime()) : 0;
+                const dateB = b.fecha_creacion ? (b.fecha_creacion.toMillis ? b.fecha_creacion.toMillis() : new Date(b.fecha_creacion).getTime()) : 0;
+                return dateB - dateA;
+            });
 
-        // Ordenamiento Cliente (Más nuevos primero)
-        allProducts.sort((a, b) => {
-            const dateA = a.fecha_creacion ? (a.fecha_creacion.toMillis ? a.fecha_creacion.toMillis() : new Date(a.fecha_creacion).getTime()) : 0;
-            const dateB = b.fecha_creacion ? (b.fecha_creacion.toMillis ? b.fecha_creacion.toMillis() : new Date(b.fecha_creacion).getTime()) : 0;
-            return dateB - dateA;
-        });
+            productsLoaded = true;
+        } catch (prodErr) {
+            console.error("Error loading products:", prodErr);
+            throw { source: 'products', error: prodErr }; // Re-throw to main catcher
+        }
 
-        // 2. Fetch Sales (Orders where any item has autor_id == user.uid)
-        // This is a simplification. A more robust approach would be to query order_items
-        // that reference the creator's products. For now, we iterate orders.
+        // 2. Fetch Orders (Might fail if Rules/Auth are strict)
         let totalSales = 0;
         let totalIncome = 0;
 
-        const ordersQuery = query(collection(db, "orders"));
-        const ordersSnapshot = await getDocs(ordersQuery);
+        try {
+            const ordersQuery = query(
+                collection(db, "orders"),
+                where("author_ids", "array-contains", currentUser.uid)
+            );
+            const ordersSnapshot = await getDocs(ordersQuery);
 
-        ordersSnapshot.forEach(orderDoc => {
-            const orderData = orderDoc.data();
-            if (orderData.items && Array.isArray(orderData.items)) {
-                orderData.items.forEach(item => {
-                    // Check if this item belongs to the current creator
-                    if (item.autor_id === currentUser.uid) {
-                        totalSales++;
-                        totalIncome += (item.price || 0);
-                    }
-                });
-            }
-        });
+            ordersSnapshot.forEach(orderDoc => {
+                const orderData = orderDoc.data();
+                if (orderData.items && Array.isArray(orderData.items)) {
+                    orderData.items.forEach(item => {
+                        if (item.autor_id === currentUser.uid) {
+                            totalSales++;
+                            totalIncome += (item.price || 0);
+                        }
+                    });
+                }
+            });
+        } catch (orderErr) {
+            console.error("Error loading orders (Permissions?):", orderErr);
+            // Don't crash the whole page, just show 0 sales
+            ui.statIncome.parentElement.title = `Error ventas: ${orderErr.code}`; // Debug hint in UI
+        }
 
         // 3. Update Stats UI
         ui.statIncome.textContent = window.utils?.formatCurrency
@@ -137,16 +150,22 @@ async function loadPortfolioData() {
         renderInventory();
 
     } catch (error) {
-        console.error("Error cargando portafolio:", error);
-        // Mostrar mensaje detallado en interfaz si es un error de índice
-        const isIndexError = error.message && error.message.includes("index");
+        console.error("Error Fatal en Portafolio:", error);
+
+        const errObj = error.source ? error.error : error;
+        const isIndexError = errObj.message && errObj.message.includes("index");
         const msg = isIndexError
-            ? "Falta un índice en Firestore. Revisa la consola para el link de creación."
-            : "Error al cargar tus datos. Intenta recargar la página.";
+            ? "Falta un índice en Firestore (Products)."
+            : `Error en ${error.source || 'General'}: ${errObj.code || 'Desconocido'} - ${errObj.message}`;
 
         ui.loadingState.innerHTML = `
-            <i class="fa-solid fa-triangle-exclamation text-4xl text-danger mb-4"></i>
-            <p class="text-danger font-medium">${msg}</p>
+            <div class="flex flex-col items-center max-w-md text-center">
+                <i class="fa-solid fa-triangle-exclamation text-4xl text-danger mb-4"></i>
+                <p class="text-danger font-bold text-lg mb-2">Error Crítico</p>
+                <p class="text-slate-600 mb-4 bg-slate-50 p-3 rounded border border-slate-200 font-mono text-xs text-left w-full break-all">
+                    ${msg}
+                </p>
+            </div>
         `;
     }
 }

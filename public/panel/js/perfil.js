@@ -534,8 +534,10 @@ function renderSocialLinks(links) {
  * Load creator-specific data: products, stats
  */
 async function loadCreatorData() {
+    // 1. FIRST PRIORITY: LOAD PRODUCTS
+    // We do this first and independently so materials appear even if stats fail
     try {
-        // Query products by this creator
+        console.log("[Profile] Loading creator products...");
         const productsQuery = query(
             collection(db, "products"),
             where("creador_uid", "==", currentUser.uid)
@@ -556,28 +558,54 @@ async function loadCreatorData() {
             return dateB - dateA;
         });
 
-        // 2. Fetch Sales & Income (Iterate orders like in Portafolio)
+        // Render products grid (Show only latest 6)
+        if (products.length > 0) {
+            renderCreatorProducts(products.slice(0, 6));
+            ui.noProductsMsg.classList.add('hidden');
+            ui.statProducts.textContent = products.length; // Update product count from actual products
+        } else {
+            ui.creatorProductsGrid.innerHTML = '';
+            ui.noProductsMsg.classList.remove('hidden');
+            ui.statProducts.textContent = "0";
+        }
+    } catch (error) {
+        console.error("Critical Error loading creator products:", error);
+        ui.creatorProductsGrid.innerHTML = '<p class="text-red-500 text-sm">Error al cargar materiales.</p>';
+    }
+
+    // 2. SECONDARY: LOAD STATS (Sales & Income)
+    // Wrapped in separate try/catch so it doesn't break the page if it fails
+    try {
+        console.log("[Profile] Loading creator stats (Secure Query)...");
+
+        // SECURE QUERY: Only fetch orders where I am an author
+        // Requires 'author_ids' array in the order document (added in v3.0 checkout)
+        const ordersQuery = query(
+            collection(db, "orders"),
+            where("author_ids", "array-contains", currentUser.uid)
+        );
+
+        const ordersSnapshot = await getDocs(ordersQuery);
+
         let totalSales = 0;
         let totalIncome = 0;
 
-        const ordersQuery = query(collection(db, "orders"));
-        const ordersSnapshot = await getDocs(ordersQuery);
-
         ordersSnapshot.forEach(orderDoc => {
             const orderData = orderDoc.data();
+            // Double check items just to be sure calculation is correct
             if (orderData.items && Array.isArray(orderData.items)) {
                 orderData.items.forEach(item => {
-                    // Check if this item belongs to the current creator
                     if (item.autor_id === currentUser.uid) {
                         totalSales++;
-                        totalIncome += (item.price || 0);
+                        totalIncome += (Number(item.precio) || 0);
                     }
                 });
             }
         });
 
-        // Update stats
-        ui.statProducts.textContent = products.length;
+        console.log(`[Profile] Stats loaded: ${totalSales} sales, $${totalIncome}`);
+
+        // Update UI
         ui.statSales.textContent = totalSales;
 
         // Format Income
@@ -587,18 +615,9 @@ async function loadCreatorData() {
             ui.statIncome.textContent = `$ ${totalIncome.toLocaleString('es-CO')} COP`;
         }
 
-
-        // Render products grid (Show only latest 6)
-        if (products.length > 0) {
-            renderCreatorProducts(products.slice(0, 6));
-            ui.noProductsMsg.classList.add('hidden');
-        } else {
-            ui.creatorProductsGrid.innerHTML = '';
-            ui.noProductsMsg.classList.remove('hidden');
-        }
-
     } catch (error) {
-        console.error("Error loading creator data:", error);
+        console.warn("Error loading stats (likely permission or indexing issue):", error);
+        // Do not alert user, just leave stats at 0 or previous value
     }
 }
 
@@ -993,29 +1012,44 @@ function toggleSidebar(forceState) {
     const overlay = ui.mobileOverlay;
     if (!sidebar) return;
 
+    // Desktop Logic (>= 1024px)
     if (window.innerWidth >= 1024) {
-        // Desktop: Not used / Fixed
-    } else {
-        // Mobile
-        const isOpen = sidebar.classList.contains('mobile-open');
-        const newState = forceState !== undefined ? forceState : !isOpen;
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        // If forceState is undefined, we toggle. 
+        // If currently collapsed (true), we want to open (true).
+        // If currently open (false), we want to close (false).
+        const shouldBeOpen = forceState !== undefined ? forceState : isCollapsed;
 
-        if (newState) {
+        if (shouldBeOpen) {
+            sidebar.classList.remove('collapsed');
+        } else {
+            sidebar.classList.add('collapsed');
+        }
+
+    } else {
+        // Mobile Logic (< 1024px)
+        const isOpen = sidebar.classList.contains('mobile-open');
+        const shouldBeOpen = forceState !== undefined ? forceState : !isOpen;
+
+        if (shouldBeOpen) {
             sidebar.classList.add('mobile-open');
             sidebar.classList.remove('hidden'); // Ensure visible
+
             overlay.classList.remove('hidden');
+            overlay.classList.remove('pointer-events-none'); // Enable clicks
+
             setTimeout(() => overlay.classList.remove('opacity-0'), 10);
             document.body.style.overflow = 'hidden';
         } else {
             sidebar.classList.remove('mobile-open');
-            // On mobile, we might keep it 'flex' but off-canvas. 
-            // But existing HTML had 'hidden lg:pb-0'. 
-            // Ideally we just toggle transform. 
+
             overlay.classList.add('opacity-0');
+
             setTimeout(() => {
                 overlay.classList.add('hidden');
-                // sidebar.classList.add('hidden'); // Don't hide completely to allow transition
+                overlay.classList.add('pointer-events-none'); // Disable clicks
             }, 300);
+
             document.body.style.overflow = '';
         }
     }
