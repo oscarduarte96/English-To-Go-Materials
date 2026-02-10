@@ -578,10 +578,10 @@ function updateButtonState(btnElement, productId) {
 
         // Mobile Layout Fix: Full width, auto height to prevent overflow
         btnElement.classList.remove('h-9', 'h-7', 'h-11', 'whitespace-nowrap');
-        btnElement.classList.add('bg-indigo-50', 'text-indigo-600', 'border', 'border-indigo-200', 'cursor-pointer', 'w-full', 'h-auto', isGrid ? 'py-1' : 'py-3', minHeightClass);
+        btnElement.classList.add('bg-indigo-50', 'text-indigo-600', 'border', 'border-indigo-200', 'cursor-pointer', 'w-auto', 'h-auto', isGrid ? 'py-1' : 'py-3', minHeightClass);
 
         if (isGrid) {
-            btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-[10px]">Biblioteca</span>`;
+            btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-[8px] tracking-tighter">Biblioteca</span>`;
         } else {
             btnElement.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span class="text-xs sm:text-sm">Adquirido • Ver en Biblioteca</span>`;
         }
