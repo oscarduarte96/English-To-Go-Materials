@@ -96,6 +96,10 @@ const ProductModal = {
                                             <span class="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Gramática</span>
                                             <span id="modalGrammar" class="font-bold text-slate-700">-</span>
                                         </div>
+                                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 hidden" id="modalExamContainer"> <!-- Hidden by default -->
+                                            <span class="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Examen</span>
+                                            <span id="modalExam" class="font-bold text-slate-700">-</span>
+                                        </div>
                                     </div>
                                 </div>
     
@@ -142,6 +146,8 @@ const ProductModal = {
             desc: document.getElementById('modalDesc'),
             skill: document.getElementById('modalSkill'),
             grammar: document.getElementById('modalGrammar'),
+            exam: document.getElementById('modalExam'),
+            examContainer: document.getElementById('modalExamContainer'),
             price: document.getElementById('modalPrice'),
             btnAdd: document.getElementById('modalBtnAdd'),
             btnShare: document.getElementById('modalBtnShare')
@@ -223,6 +229,14 @@ const ProductModal = {
         els.desc.innerText = product.descripcion || "Sin descripción detallada.";
         els.skill.innerText = product.skills ? product.skills.join(", ") : "Varias";
         els.grammar.innerText = product.grammar ? product.grammar.join(", ") : "General";
+
+        // Handle Exam
+        if (product.exams && product.exams.length > 0) {
+            els.exam.innerText = product.exams.join(", ");
+            els.examContainer.classList.remove('hidden');
+        } else {
+            els.examContainer.classList.add('hidden');
+        }
 
         const priceFormatted = product.es_gratis ? "GRATIS" : (window.utils?.formatCurrency ? window.utils.formatCurrency(product.precio) : `$${product.precio}`);
         els.price.innerText = priceFormatted;

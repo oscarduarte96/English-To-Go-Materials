@@ -81,7 +81,8 @@ if (form) {
                 await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, formData);
 
                 // 5. Success!
-                showStatus('success', 'Tu solicitud ha sido enviada');
+                // showStatus('success', 'Tu solicitud ha sido enviada'); // OLD
+                showSuccessState(); // NEW
                 form.reset();
                 charCountSpan.textContent = '0';
 
@@ -94,14 +95,41 @@ if (form) {
             console.error('Error sending application:', error);
             showStatus('error', 'Hubo un error al enviar tu solicitud. Por favor intenta de nuevo.');
         } finally {
-            btnSubmit.innerHTML = originalBtnContent;
-            btnSubmit.disabled = false;
+            if (btnSubmit) {
+                btnSubmit.innerHTML = originalBtnContent;
+                btnSubmit.disabled = false;
+            }
         }
     });
 }
 
+function showSuccessState() {
+    const card = document.querySelector('.card');
+    if (card) {
+        card.innerHTML = `
+            <div class="text-center py-8 animate-fade-in">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-check text-4xl text-green-600"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">¡Solicitud Enviada!</h3>
+                 <p class="text-slate-500 mb-8 max-w-md mx-auto">
+                    Hemos recibido tu aplicación para ser Creador. Nuestro equipo pedagógico revisará tu perfil y te contactará en 24-48 horas.
+                </p>
+                <div class="flex justify-center gap-4">
+                     <a href="../../catalogo.html" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                        <i class="fa-solid fa-store mr-2"></i> Ir al Catálogo
+                    </a>
+                    <a href="../../index.html" class="bg-white text-slate-700 font-bold py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all">
+                        Ir al Inicio
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+}
+
 /**
- * Show status message below the form.
+ * Show status message below the form (only for errors now).
  * @param {'success' | 'error'} type 
  * @param {string} message 
  */

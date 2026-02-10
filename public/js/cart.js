@@ -360,7 +360,7 @@ function updateCartUI() {
     }
 
     ui.itemsContainer.innerHTML = '';
-    
+
     // Variables para cálculo dinámico
     let total = 0;
     let eligibleSubtotal = 0; // Subtotal de productos que SÍ aceptan descuento
@@ -385,10 +385,10 @@ function updateCartUI() {
             : `<div class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300 text-xl"><i class="fa-solid fa-file"></i></div>`;
 
         const precioFormateado = window.utils ? window.utils.formatCurrency(item.precio) : `$ ${item.precio}`;
-        
+
         // Indicador visual si el producto NO aplica para cupón (opcional pero útil)
-        const noDiscountBadge = !isEligible && window.appState.appliedCoupon 
-            ? `<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-2">No Dto.</span>` 
+        const noDiscountBadge = !isEligible && window.appState.appliedCoupon
+            ? `<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-2">No Dto.</span>`
             : '';
 
         div.innerHTML = `
@@ -421,7 +421,7 @@ function updateCartUI() {
     if (coupon) {
         // El descuento se calcula SOLO sobre el subtotal elegible
         discountAmount = Math.round(eligibleSubtotal * (coupon.discount_percent / 100));
-        
+
         // El total final es el Total Global menos el Descuento calculado
         finalTotal = total - discountAmount;
 
@@ -436,7 +436,7 @@ function updateCartUI() {
             if (ui.discountDisplay) {
                 ui.discountDisplay.innerText = window.utils ? `-${window.utils.formatCurrency(discountAmount)}` : `-$ ${discountAmount}`;
             }
-            
+
             // Si hay productos no elegibles, avisar en el status
             if (eligibleSubtotal < total && ui.couponStatus) {
                 ui.couponStatus.innerText = `⚠️ Cupón aplicado solo a productos válidos.`;
@@ -526,7 +526,7 @@ async function handleCheckout() {
                 verifiedTotal += realPrice;
 
                 verifiedItems.push({
-                    ...localCart[index], 
+                    ...localCart[index],
                     precio: realPrice,
                     verified_at: new Date().toISOString()
                 });
@@ -562,7 +562,7 @@ async function handleCheckout() {
                     const prod = snap.data();
                     // Validación estricta usando datos del servidor
                     const isDiscountsAllowed = prod.allowDiscounts !== false && prod.allowDiscounts !== "false";
-                    
+
                     if (isDiscountsAllowed) {
                         eligibleCurrentTotal += item.precio;
                     }
@@ -580,7 +580,7 @@ async function handleCheckout() {
             user_email: user.email,
             user_name: user.displayName || "Usuario",
             items: verifiedItems,
-            author_ids: authorIds, 
+            author_ids: authorIds,
             original_total: verifiedTotal,
             discount_amount: discountAmount,
             final_total: finalTotal,
@@ -594,7 +594,7 @@ async function handleCheckout() {
         };
 
         const docRef = await addDoc(collection(db, "orders"), orderData);
-        
+
         window.appState.appliedCoupon = null;
         await clearCart();
         closeCart();
@@ -666,7 +666,7 @@ async function handleZeroCostCheckout() {
             if (snap.exists()) {
                 const prod = snap.data();
                 const isDiscountsAllowed = prod.allowDiscounts !== false && prod.allowDiscounts !== "false";
-                
+
                 if (isDiscountsAllowed) {
                     eligibleTotal += verifiedItems[index].precio;
                 }
@@ -693,7 +693,7 @@ async function handleZeroCostCheckout() {
             user_email: user.email,
             user_name: user.displayName || "Usuario",
             items: verifiedItems,
-            author_ids: authorIds, 
+            author_ids: authorIds,
             original_total: verifiedTotal,
             discount_amount: discountAmount,
             final_total: 0,

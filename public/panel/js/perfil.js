@@ -627,34 +627,58 @@ async function loadCreatorData() {
 /**
  * Render creator's products mini-grid
  */
+/**
+ * Render creator's products mini-grid
+ */
 function renderCreatorProducts(products) {
     ui.creatorProductsGrid.innerHTML = products.map(p => {
         const img = p.imagenes_preview?.[0] || 'https://via.placeholder.com/150?text=No+Image';
-        const price = p.es_gratis ? 'GRATIS' : `$${p.precio}`;
+        const price = p.es_gratis ? 'GRATIS' : (window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`);
         const priceClass = p.es_gratis ? 'text-accent' : 'text-slate-900';
 
-        // Use a div instead of 'a' tag to prevent navigation
-        // Add cursor-pointer and onclick handled via delegation or direct assignment below
+        // Logic for Public View vs Private View
+        let secondaryInfoHTML = '';
+
+        if (isPublicView) {
+            // PUBLIC: Share Button
+            secondaryInfoHTML = `
+                <button class="btn-share-product w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors z-20" 
+                        data-product-id="${p.id}" title="Compartir">
+                    <i class="fa-solid fa-share-nodes text-xs"></i>
+                </button>
+            `;
+        } else {
+            // PRIVATE: Sales Counter
+            secondaryInfoHTML = `
+                <p class="text-[11px] text-slate-400 mt-1">
+                    <i class="fa-solid fa-shopping-cart mr-1"></i> ${p.ventas || 0} ventas
+                </p>
+            `;
+        }
+
         return `
-            <div data-product-id="${p.id}" class="product-mini-card bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex group cursor-pointer hover:border-primary transition-colors">
+            <div data-product-id="${p.id}" class="product-mini-card bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex group cursor-pointer hover:border-primary transition-colors relative">
                 <div class="w-24 h-24 flex-shrink-0 bg-slate-100 overflow-hidden">
                     <img src="${img}" alt="${p.titulo}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                 </div>
                 <div class="p-3 flex flex-col justify-center flex-1 min-w-0">
                     <h4 class="font-bold text-sm text-slate-800 truncate group-hover:text-primary transition-colors">${p.titulo}</h4>
-                    <p class="text-[11px] text-slate-400 mt-1">
-                        <i class="fa-solid fa-shopping-cart mr-1"></i> ${p.ventas || 0} ventas
-                    </p>
+                    
+                    ${secondaryInfoHTML}
+
                     <p class="font-black ${priceClass} text-sm mt-1">${price}</p>
                 </div>
             </div>
         `;
     }).join('');
 
-    // Add click listeners
+    // Add click listeners for Cards (Open Modal)
     const cards = ui.creatorProductsGrid.querySelectorAll('.product-mini-card');
     cards.forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
+            // Prevent opening modal if clicking share button
+            if (e.target.closest('.btn-share-product')) return;
+
             const pid = card.getAttribute('data-product-id');
             const product = products.find(p => p.id === pid);
             if (product) {
@@ -662,6 +686,47 @@ function renderCreatorProducts(products) {
             }
         };
     });
+
+    // Add click listeners for Share Buttons (Public View)
+    if (isPublicView) {
+        const shareBtns = ui.creatorProductsGrid.querySelectorAll('.btn-share-product');
+        shareBtns.forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const pid = btn.getAttribute('data-product-id');
+                const product = products.find(p => p.id === pid);
+                if (product) {
+                    handleShare(product);
+                }
+            };
+        });
+    }
+}
+
+async function handleShare(product) {
+    const url = `${window.location.origin}/catalogo.html?id=${product.id}`;
+    // Texto persuasivo
+    const priceText = product.es_gratis ? "¡Es GRATIS!" : `Cuesta solo $${product.precio}`;
+    const text = `🔥 ¡Profe, mira este material! "${product.titulo}" te va a ahorrar horas de planeación. ${priceText}. Descárgalo aquí:`;
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: product.titulo,
+                text: text,
+                url: url
+            });
+        } else {
+            await navigator.clipboard.writeText(`${text} ${url}`);
+            if (window.utils?.showToast) {
+                window.utils.showToast("¡Enlace copiado al portapapeles!");
+            } else {
+                alert("¡Enlace copiado al portapapeles! Compártelo donde quieras.");
+            }
+        }
+    } catch (err) {
+        console.error("Error compartiendo:", err);
+    }
 }
 
 /**

@@ -46,7 +46,9 @@ const ui = {
     metaLevel: document.getElementById('meta-level'),
     metaSkill: document.getElementById('meta-skill'),
     metaType: document.getElementById('meta-type'),
+    metaType: document.getElementById('meta-type'),
     metaContext: document.getElementById('meta-context'),
+    metaExam: document.getElementById('meta-exam'),
 
     // Información del Creador (Teacher)
     teacherName: document.getElementById('teacher-name'),
@@ -176,6 +178,15 @@ function renderProduct(data) {
     if (ui.metaSkill) ui.metaSkill.textContent = arrayToString(data.skills);
     if (ui.metaType) ui.metaType.textContent = arrayToString(data.types);
     if (ui.metaContext) ui.metaContext.textContent = arrayToString(data.context);
+    if (ui.metaExam) {
+        ui.metaExam.textContent = (data.exams && data.exams.length > 0) ? arrayToString(data.exams) : "N/A";
+        // Ocultar si no hay examen
+        if (!data.exams || data.exams.length === 0) {
+            ui.metaExam.parentElement.classList.add('hidden');
+        } else {
+            ui.metaExam.parentElement.classList.remove('hidden');
+        }
+    }
 
     // F. Badges / Etiquetas Visuales
     if (ui.badgesContainer) {

@@ -19,7 +19,7 @@ const CATEGORIAS = {
     levels: ["Pre-A1 (Starters / Pre-school)", "A1 (Beginner)", "A1-A2 (High Beginner)", "A2 (Elementary)", "B1 (Intermediate)", "B1+ (Intermediate Plus)", "B2 (Upper Intermediate)", "C1 (Advanced)", "C2 (Proficiency)", "Multi-level (Adaptable)", "Adult Education", "Homeschooling"],
     skills: ["Speaking (Conversación)", "Listening (Escucha)", "Reading Comprehension", "Writing (Escritura)", "Grammar (Gramática)", "Vocabulary (Vocabulario)", "Pronunciation / Phonetics", "Spelling (Ortografía)", "Phonics", "Critical Thinking", "Translation"],
     types: ["Worksheet (Hoja de trabajo)", "Flashcards (Tarjetas)", "Game / Board Game", "PowerPoint / Slides", "Lesson Plan (Plan de Clase)", "Exam / Quiz / Assessment", "Project Based Learning", "Interactive Notebook", "Video Guide", "Song / Music Activity", "Role Play Script", "Ice Breakers", "Poster / Decoration", "Infographic", "Cut-outs / Craft"],
-    exams: ["TOEFL iBT", "TOEFL ITP", "TOEFL Primary/Junior", "IELTS Academic", "IELTS General Training", "Cambridge: A2 Key (KET)", "Cambridge: B1 Preliminary (PET)", "Cambridge: B2 First (FCE)", "Cambridge: C1 Advanced (CAE)", "Cambridge: C2 Proficiency (CPE)", "TOEIC (Listening & Reading)", "TOEIC (Speaking & Writing)", "MET (Michigan)", "Duolingo English Test", "Trinity (GESE/ISE)", "APTIS", "PTE Academic"],
+    exams: ["TOEFL iBT", "TOEFL ITP", "TOEFL Primary/Junior", "IELTS Academic", "IELTS General Training", "Cambridge: A2 Key (KET)", "Cambridge: B1 Preliminary (PET)", "Cambridge: B2 First (FCE)", "Cambridge: C1 Advanced (CAE)", "Cambridge: C2 Proficiency (CPE)", "TOEIC (Listening & Reading)", "TOEIC (Speaking & Writing)", "MET (Michigan)", "Duolingo English Test", "Trinity (GESE/ISE)", "APTIS", "PTE Academic", "CELPIP"],
     grammar: ["Nouns", "Pronouns", "Adjectives", "Adverbs", "Prepositions", "Articles", "Comparatives & Superlatives", "Modals", "Gerunds & Infinitives", "Phrasal Verbs", "Question Tags", "Relative Clauses", "Conjunctions", "Quantifiers", "Word Order", "Prefixes & Suffixes", "Collocations", "Idioms"],
     context: ["Business English", "Travel & Tourism", "Medical English", "Legal English", "Aviation English", "Daily Routine", "Family & Friends", "Food & Cooking", "Shopping", "Clothes & Fashion", "Animals & Nature", "Sports & Hobbies", "Technology & Social Media", "Environment", "School & Education", "Jobs & Professions", "Weather & Seasons", "Halloween", "Christmas", "Thanksgiving", "Easter", "Valentine's Day", "Summer Holidays", "Movies & TV", "Music & Arts"]
 };
@@ -272,7 +272,7 @@ function setupEvents() {
 async function fetchAllProducts() {
     if (localState.isLoading) return;
     localState.isLoading = true;
-    ui.grid.innerHTML = '<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-500"></i></div>';
+    // ui.grid.innerHTML = ... removed for skeleton preservation
 
     try {
         const q = query(collection(db, "products"), orderBy("fecha_creacion", "desc"));
@@ -295,6 +295,7 @@ async function fetchAllProducts() {
             });
         });
 
+        localState.isLoading = false;
         applyFilters();
 
         // Deep Link: Abrir modal si hay un ID de producto en la URL
@@ -416,6 +417,7 @@ function renderTeacherCards(teachers) {
  * 8. RENDERIZADO (UI) MEJORADO - TARJETAS INTERACTIVAS
  */
 function renderGrid() {
+    if (localState.isLoading) return;
     const totalFiltered = localState.filteredProducts.length;
     ui.resultCount.innerText = `${totalFiltered} encontrados`;
 

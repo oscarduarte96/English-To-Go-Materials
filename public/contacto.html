@@ -18,6 +18,8 @@
         }
     </style>
 
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 </head>
 
@@ -27,9 +29,9 @@
 
     <main class="flex-grow">
 
-        <div class="max-w-5xl mx-auto px-6 py-12 md:py-20">
+        <div class="max-w-5xl mx-auto px-4 md:px-6 py-8 md:py-20">
 
-            <div class="text-center mb-16">
+            <div class="text-center mb-8 md:mb-16">
                 <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-2 block">Soporte
                     Corporativo</span>
                 <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">¿Dudas, sugerencias o problemas?</h1>
@@ -37,62 +39,82 @@
                     impecable.</p>
             </div>
 
-            <div class="grid lg:grid-cols-2 gap-12 items-start">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
                 <!-- Columna Izquierda: Formulario -->
-                <div class="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-                    <h2 class="text-xl font-bold text-slate-900 mb-6">Envíanos un mensaje</h2>
+                <div
+                    class="bg-white p-5 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative min-h-[500px]">
 
-                    <form
-                        onsubmit="event.preventDefault(); alert('Gracias por contactarnos. El equipo de soporte revisará su solicitud.');"
-                        class="space-y-5">
-                        <div class="grid md:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nombre
-                                    Completo</label>
-                                <input type="text"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                                    placeholder="Su nombre">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Correo
-                                    Electrónico</label>
-                                <input type="email"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                                    placeholder="nombre@empresa.com">
-                            </div>
+                    <!-- SUCCESS MESSAGE CONTAINER (Hidden by default) -->
+                    <div id="successContainer"
+                        class="hidden absolute inset-0 flex flex-col justify-center items-center text-center p-8 bg-white rounded-3xl z-10 animate-fade-in">
+                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                            <i class="fa-solid fa-check text-4xl text-green-600"></i>
                         </div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">¡Mensaje Enviado!</h3>
+                        <p class="text-slate-500 mb-8">
+                            Hemos recibido tu solicitud correctamente. Nuestro equipo de soporte te responderá a la
+                            brevedad posible.
+                        </p>
+                        <a href="catalogo.html"
+                            class="w-full bg-slate-900 text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-left"></i> Volver al Catálogo
+                        </a>
+                    </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Asunto</label>
-                            <div class="relative">
-                                <select
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
-                                    <option value="" disabled selected>Seleccione el motivo...</option>
-                                    <option value="buy_issue">Soy Comprador: Problema con una descarga</option>
-                                    <option value="sell_issue">Soy Vendedor: Duda sobre mis pagos/cuenta</option>
-                                    <option value="suggestion">Sugerencia general</option>
-                                    <option value="bug_report">Reportar un error en la web</option>
-                                </select>
-                                <div
-                                    class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
-                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+
+                    <div id="formContainer">
+                        <h2 class="text-xl font-bold text-slate-900 mb-6">Envíanos un mensaje</h2>
+
+                        <form id="contactForm" class="space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nombre
+                                        Completo</label>
+                                    <input type="text" id="contactName" required
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                                        placeholder="Su nombre">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Correo
+                                        Electrónico</label>
+                                    <input type="email" id="contactEmail" required
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                                        placeholder="nombre@empresa.com">
                                 </div>
                             </div>
-                        </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Mensaje</label>
-                            <textarea rows="4"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none"
-                                placeholder="Describa su situación detalladamente..."></textarea>
-                        </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Asunto</label>
+                                <div class="relative">
+                                    <select id="contactSubject" required
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled selected>Seleccione el motivo...</option>
+                                        <option value="buy_issue">Soy Comprador: Problema con una descarga</option>
+                                        <option value="sell_issue">Soy Vendedor: Duda sobre mis pagos/cuenta</option>
+                                        <option value="suggestion">Sugerencia general</option>
+                                        <option value="bug_report">Reportar un error en la web</option>
+                                    </select>
+                                    <div
+                                        class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <button type="submit"
-                            class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200">
-                            Enviar Solicitud
-                        </button>
-                    </form>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Mensaje</label>
+                                <textarea id="contactMessage" rows="4" required
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none"
+                                    placeholder="Describa su situación detalladamente..."></textarea>
+                            </div>
+
+                            <button type="submit" id="btnSubmit"
+                                class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200">
+                                Enviar Solicitud
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Columna Derecha: Info Directa + FAQ -->
@@ -137,8 +159,7 @@
                                 </summary>
                                 <div
                                     class="px-4 pb-4 text-slate-500 text-sm leading-relaxed border-t border-slate-50 pt-3">
-                                    Una vez completada la compra, recibirás un correo electrónico inmediato con el
-                                    enlace de descarga. También puedes acceder a todos tus materiales desde la sección
+                                    Una vez completada la compra, puedes acceder a todos tus materiales desde la sección
                                     "Mi Biblioteca" en tu panel de usuario.
                                 </div>
                             </details>
@@ -193,6 +214,8 @@
     <script type="module" src="./assets/js/utils.js?v=3.0"></script>
     <script type="module" src="./assets/js/components.js?v=3.0"></script>
     <script type="module" src="./js/cart.js?v=3.0"></script>
+    <!-- Contact Logic -->
+    <script type="module" src="./js/contacto.js?v=3.0"></script>
 
 </body>
 

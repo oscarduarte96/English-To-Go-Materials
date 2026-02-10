@@ -73,7 +73,8 @@ const CATEGORIAS = {
         "Duolingo English Test",
         "Trinity (GESE/ISE)",
         "APTIS",
-        "PTE Academic"
+        "PTE Academic",
+        "CELPIP"
     ],
     tenses: [
         "Present Simple",
