@@ -124,11 +124,17 @@ async function loadPortfolioData() {
 
             ordersSnapshot.forEach(orderDoc => {
                 const orderData = orderDoc.data();
+
+                // Filtrar solo órdenes completadas
+                if (orderData.status !== 'completed') return;
+
                 if (orderData.items && Array.isArray(orderData.items)) {
                     orderData.items.forEach(item => {
+                        // Verificar que el item pertenece a este autor
                         if (item.autor_id === currentUser.uid) {
                             totalSales++;
-                            totalIncome += (item.price || 0);
+                            // CORREGIDO: item.precio (no item.price)
+                            totalIncome += (Number(item.precio) || 0);
                         }
                     });
                 }

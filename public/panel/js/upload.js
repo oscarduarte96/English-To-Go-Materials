@@ -545,9 +545,13 @@ if (form && status && btnSubmit) {
                 const file = previewFiles[i];
                 const timestamp = Date.now();
                 const fileName = `${timestamp}_${i}_${file.name}`;
-                const storageRef = ref(storage, `previews/${fileName}`);
+                const storageRef = ref(storage, `previews/${user.uid}/${fileName}`);
 
-                const snapshot = await uploadBytes(storageRef, file);
+                const metadata = {
+                    contentType: file.type
+                };
+
+                const snapshot = await uploadBytes(storageRef, file, metadata);
                 const downloadUrl = await getDownloadURL(snapshot.ref);
                 imageUrls.push(downloadUrl);
             }
@@ -562,9 +566,13 @@ if (form && status && btnSubmit) {
                 // Subir archivo a Storage
                 const timestamp = Date.now();
                 const productFileName = `${timestamp}_${productFile.name}`;
-                const productStorageRef = ref(storage, `products/${productFileName}`);
+                const productStorageRef = ref(storage, `products/${user.uid}/${productFileName}`);
 
-                const productSnapshot = await uploadBytes(productStorageRef, productFile);
+                const metadata = {
+                    contentType: productFile.type
+                };
+
+                const productSnapshot = await uploadBytes(productStorageRef, productFile, metadata);
                 productUrl = await getDownloadURL(productSnapshot.ref);
                 fileType = productFile.name.split('.').pop().toLowerCase();
             } else {

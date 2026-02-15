@@ -163,7 +163,7 @@ window.addToCart = async (product) => {
             ? product.imagenes_preview[0]
             : null,
         tipo: product.tipo_archivo || 'Digital',
-        autor_id: product._normalizedTeacherId || 'unknown',
+        autor_id: product.creador_uid || 'unknown',
         // 🔥 VALIDACIÓN CRÍTICA: Guardamos si permite descuentos (true/false)
         allowDiscounts: product.allowDiscounts !== false && product.allowDiscounts !== "false"
     };
@@ -528,6 +528,7 @@ async function handleCheckout() {
                 verifiedItems.push({
                     ...localCart[index],
                     precio: realPrice,
+                    autor_id: productData.creador_uid || 'unknown', // 🔥 CRITICAL FIX: Ensure autor_id comes from DB
                     verified_at: new Date().toISOString()
                 });
             } else {
@@ -573,6 +574,7 @@ async function handleCheckout() {
             finalTotal = verifiedTotal - discountAmount;
         }
 
+        // 🔥 CRITICAL FIX: Calculate author_ids from VERIFIED items
         const authorIds = [...new Set(verifiedItems.map(item => item.autor_id).filter(id => id && id !== 'unknown'))];
 
         const orderData = {
@@ -651,6 +653,7 @@ async function handleZeroCostCheckout() {
                 verifiedItems.push({
                     ...localCart[index],
                     precio: realPrice,
+                    autor_id: productData.creador_uid || 'unknown', // 🔥 CRITICAL FIX: Ensure autor_id comes from DB
                     verified_at: new Date().toISOString()
                 });
             }
@@ -686,6 +689,7 @@ async function handleZeroCostCheckout() {
             return;
         }
 
+        // 🔥 CRITICAL FIX: Calculate author_ids from VERIFIED items
         const authorIds = [...new Set(verifiedItems.map(item => item.autor_id).filter(id => id && id !== 'unknown'))];
 
         const orderData = {

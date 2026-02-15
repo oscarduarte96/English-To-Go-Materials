@@ -924,7 +924,7 @@ async function handleAvatarUpload(e) {
         const timestamp = Date.now();
         const extension = file.name.split('.').pop();
         const fileName = `avatar_${timestamp}.${extension}`;
-        const storageRef = ref(storage, `users/${currentUser.uid}/${fileName}`);
+        const storageRef = ref(storage, `avatars/${currentUser.uid}/${fileName}`);
 
         // Upload
         const snapshot = await uploadBytes(storageRef, file);

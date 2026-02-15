@@ -2,15 +2,39 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Default: Public Read (for images), No Write
-    match /{allPaths=**} {
+    // 1. PRODUCTOS (Archivos de venta)
+    // Estructura: /products/{userId}/{fileName}
+    match /products/{userId}/{fileName} {
+      // Cualquiera puede leer (necesario para la descarga post-compra)
       allow read: if true;
-      allow write: if false;
+      
+      // SOLO el dueño de la carpeta puede subir/borrar
+      // Limitamos el tamaño a 500MB por seguridad
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 500 * 1024 * 1024; 
     }
 
-    // User Avatars: Owner can write
+    // 2. PREVIEWS (Imágenes de portada)
+    // Estructura: /previews/{userId}/{fileName}
+    match /previews/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   // Eliminated strict contentType check to prevent false positives
+                   && request.resource.size < 20 * 1024 * 1024;
+    }
+    
+    // 3. AVATARES DE USUARIO
     match /avatars/{userId}/{fileName} {
+      allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // BLOQUEO GENERAL
+    // Cualquier otra ruta no especificada arriba está prohibida
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
