@@ -528,7 +528,11 @@ async function handleCheckout() {
                 verifiedItems.push({
                     ...localCart[index],
                     precio: realPrice,
-                    autor_id: productData.creador_uid || 'unknown', // 🔥 CRITICAL FIX: Ensure autor_id comes from DB
+                    autor_id: getAuthorId(productData), // 🔥 FIXED: Robust author ID detection
+                    url_archivo: productData.url_archivo || null,
+                    url_acceso: productData.url_acceso || null,
+                    tipo_archivo: productData.tipo_archivo || 'Digital',
+                    tipo_entrega: productData.tipo_entrega || 'local_download',
                     verified_at: new Date().toISOString()
                 });
             } else {
@@ -653,7 +657,11 @@ async function handleZeroCostCheckout() {
                 verifiedItems.push({
                     ...localCart[index],
                     precio: realPrice,
-                    autor_id: productData.creador_uid || 'unknown', // 🔥 CRITICAL FIX: Ensure autor_id comes from DB
+                    autor_id: getAuthorId(productData), // 🔥 FIXED: Robust author ID detection
+                    url_archivo: productData.url_archivo || null,
+                    url_acceso: productData.url_acceso || null,
+                    tipo_archivo: productData.tipo_archivo || 'Digital',
+                    tipo_entrega: productData.tipo_entrega || 'local_download',
                     verified_at: new Date().toISOString()
                 });
             }
@@ -746,3 +754,28 @@ async function handleZeroCostCheckout() {
 
 // Iniciar
 document.addEventListener('DOMContentLoaded', init);
+
+/**
+ * HELPER: DETECTAR ID DEL CREADOR
+ * Busca en múltiples campos para evitar "unknown"
+ */
+function getAuthorId(productData) {
+    if (!productData) return 'unknown';
+
+    // Lista de prioridad de campos donde podría estar el ID
+    const possibleFields = [
+        'creador_uid', // Estándar actual
+        'author_id',   // Posible legacy
+        'uid',         // Posible legacy
+        'userId',      // Posible legacy
+        'id_creador'   // Posible legacy
+    ];
+
+    for (const field of possibleFields) {
+        if (productData[field] && typeof productData[field] === 'string' && productData[field].length > 5) {
+            return productData[field];
+        }
+    }
+
+    return 'unknown';
+}

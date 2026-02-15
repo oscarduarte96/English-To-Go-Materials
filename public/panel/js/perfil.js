@@ -592,6 +592,10 @@ async function loadCreatorData() {
 
         ordersSnapshot.forEach(orderDoc => {
             const orderData = orderDoc.data();
+
+            // FIX: Only count completed orders (consistency with portafolio.js)
+            if (orderData.status !== 'completed') return;
+
             // Double check items just to be sure calculation is correct
             if (orderData.items && Array.isArray(orderData.items)) {
                 orderData.items.forEach(item => {

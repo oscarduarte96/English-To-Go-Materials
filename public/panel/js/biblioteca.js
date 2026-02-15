@@ -66,11 +66,11 @@ async function loadLibrary(uid) {
         ui.resultsCount.textContent = 'Cargando recursos...';
 
         const ordersRef = collection(db, "orders");
-        // Buscamos todas las órdenes, para luego filtrar
+        // Buscamos todas las órdenes del usuario y filtramos en memoria por robustez
+        // (ya que algunos scripts externos guardan el status como Map en lugar de String)
         const q = query(
             ordersRef,
-            where("user_id", "==", uid),
-            where("status", "==", "completed")
+            where("user_id", "==", uid)
         );
 
         const querySnapshot = await getDocs(q);
@@ -96,6 +96,15 @@ async function loadLibrary(uid) {
 
         for (const order of tempOrders) {
             const orderData = order.data;
+
+            // 🔥 ROBUST STATUS CHECK: Manejar tanto String como Map (error común de GAS/Firestore REST)
+            const rawStatus = orderData.status;
+            const status = (rawStatus && typeof rawStatus === 'object' && rawStatus.stringValue)
+                ? rawStatus.stringValue
+                : rawStatus;
+
+            if (status !== 'completed') continue;
+
             const orderDate = orderData.created_at?.seconds || 0;
 
             if (orderData.items && Array.isArray(orderData.items)) {

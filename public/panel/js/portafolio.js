@@ -131,10 +131,14 @@ async function loadPortfolioData() {
                 if (orderData.items && Array.isArray(orderData.items)) {
                     orderData.items.forEach(item => {
                         // Verificar que el item pertenece a este autor
-                        if (item.autor_id === currentUser.uid) {
+                        const itemAutorId = String(item.autor_id);
+                        const currentUid = String(currentUser.uid);
+
+                        if (itemAutorId === currentUid) {
                             totalSales++;
                             // CORREGIDO: item.precio (no item.price)
-                            totalIncome += (Number(item.precio) || 0);
+                            const precio = Number(item.precio) || 0;
+                            totalIncome += precio;
                         }
                     });
                 }
@@ -149,6 +153,7 @@ async function loadPortfolioData() {
         ui.statIncome.textContent = window.utils?.formatCurrency
             ? window.utils.formatCurrency(totalIncome)
             : `$ ${totalIncome.toLocaleString('es-CO')} COP`;
+
         ui.statSales.textContent = totalSales;
         ui.statProducts.textContent = allProducts.length;
 

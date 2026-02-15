@@ -773,7 +773,11 @@ async function handleFreeDownload(product, btnElement) {
                 precio: 0,
                 imagen: product._img || null,
                 tipo: product.tipo_archivo || 'Digital',
-                autor_id: product.creador_uid || 'unknown'
+                autor_id: product.creador_uid || 'unknown',
+                url_archivo: product.url_archivo || null,
+                url_acceso: product.url_acceso || null,
+                tipo_archivo: product.tipo_archivo || 'Digital',
+                tipo_entrega: product.tipo_entrega || 'local_download'
             }],
             original_total: 0,
             discount_amount: 0,
