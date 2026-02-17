@@ -1,5 +1,5 @@
 # ==================================================================
-# CONFIGURACIÓN HOSTINGER - ENGLISH TO GO MATERIALS
+# CONFIGURACIÓN OPTIMIZADA - ENGLISH TO GO (HOSTINGER)
 # ==================================================================
 
 # 1. SEGURIDAD Y HARDENING
@@ -17,9 +17,6 @@ AddDefaultCharset UTF-8
     # Evita MIME Sniffing
     Header set X-Content-Type-Options "nosniff"
     
-    # Política de Referencia
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    
     # Cache Control para archivos HTML
     <FilesMatch "\.(html|php)$">
         Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
@@ -36,27 +33,21 @@ AddDefaultCharset UTF-8
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # B) ELIMINAR SLASH FINAL
+    # B) ELIMINAR SLASH FINAL (Evita contenido duplicado SEO)
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)/$ /$1 [L,R=301]
 
     # C) ELIMINAR EXTENSIÓN .html
-    # Si el archivo NO es un directorio y existe con .html...
+    # Si el usuario visita /contacto, cargamos internamente /contacto.html
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.html -f
     RewriteRule ^(.*)$ $1.html [L]
 
-    # D) MANEJO DE ERROR 404
+    # D) MANEJO DE ERRORES 404
     ErrorDocument 404 /404.html
 </IfModule>
 
-# 3. COMPRESIÓN GZIP
-# ------------------------------------------------------------------
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml
-</IfModule>
-
-# 4. CACHÉ DE NAVEGADOR
+# 3. CACHÉ DE NAVEGADOR (Velocidad para imágenes/CSS/JS)
 # ------------------------------------------------------------------
 <IfModule mod_expires.c>
     ExpiresActive On
@@ -65,7 +56,6 @@ AddDefaultCharset UTF-8
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
     ExpiresByType image/webp "access plus 1 year"
-    ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
 </IfModule>

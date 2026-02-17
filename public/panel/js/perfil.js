@@ -15,7 +15,9 @@ import {
     where,
     getDocs,
     orderBy,
-    limit
+    limit,
+    addDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 import ProductModal from "../../js/product-modal.js";
@@ -106,6 +108,7 @@ let isPublicView = false;  // True when viewing another user's profile
 
 let profileUid = null;     // UID of the profile being viewed
 let allTeachers = [];      // Cache for sidebar teacher search
+let purchasedProductIds = new Set(); // IDs of products the logged-in user already owns
 
 // ========================================
 // 3. INITIALIZATION - DUAL VIEW DETECTION
@@ -134,11 +137,38 @@ onAuthStateChanged(auth, async (user) => {
     }
     // Note: If no uid param AND not logged in, guard.js will redirect to login
 
+    // Fetch user purchases to detect ownership (works for both public and private views)
+    if (user) {
+        await fetchUserPurchases(user.uid);
+
+        // Re-render mini-card buttons now that purchases are loaded
+        const cards = ui.creatorProductsGrid?.querySelectorAll('.product-mini-card');
+        if (cards) {
+            cards.forEach(card => {
+                const btn = card.querySelector('.btn-profile-action');
+                const pid = card.getAttribute('data-product-id');
+                if (btn && pid) updateMiniCardButton(btn, pid);
+            });
+        }
+    }
+
     // Init Modules
     ProductModal.init();
 
     // Init Sidebar
     initSidebar();
+
+    // Listen for cart changes to keep buttons in sync
+    window.addEventListener('cart-updated', () => {
+        const cards = ui.creatorProductsGrid?.querySelectorAll('.product-mini-card');
+        if (cards) {
+            cards.forEach(card => {
+                const btn = card.querySelector('.btn-profile-action');
+                const pid = card.getAttribute('data-product-id');
+                if (btn && pid) updateMiniCardButton(btn, pid);
+            });
+        }
+    });
 });
 
 /**
@@ -627,14 +657,12 @@ async function loadCreatorData() {
 
 /**
  * Render creator's products mini-grid
- */
-/**
- * Render creator's products mini-grid
- */
-/**
- * Render creator's products mini-grid
+ * Now includes ownership-aware action buttons matching catalog behavior.
  */
 function renderCreatorProducts(products) {
+    // Store products reference for event listeners
+    const productsRef = products;
+
     ui.creatorProductsGrid.innerHTML = products.map(p => {
         const img = p.imagenes_preview?.[0] || 'https://via.placeholder.com/150?text=No+Image';
         const price = p.es_gratis ? 'GRATIS' : (window.utils?.formatCurrency ? window.utils.formatCurrency(p.precio) : `$${p.precio}`);
@@ -644,12 +672,18 @@ function renderCreatorProducts(products) {
         let secondaryInfoHTML = '';
 
         if (isPublicView) {
-            // PUBLIC: Share Button
+            // PUBLIC: Share Button + Action Button (ownership-aware)
             secondaryInfoHTML = `
-                <button class="btn-share-product w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors z-20" 
-                        data-product-id="${p.id}" title="Compartir">
-                    <i class="fa-solid fa-share-nodes text-xs"></i>
-                </button>
+                <div class="flex items-center gap-1.5 mt-1">
+                    <button class="btn-share-product w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors z-20" 
+                            data-product-id="${p.id}" title="Compartir">
+                        <i class="fa-solid fa-share-nodes text-[10px]"></i>
+                    </button>
+                    <button class="btn-profile-action h-6 px-2.5 flex-shrink-0 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95 whitespace-nowrap z-20"
+                            data-product-id="${p.id}">
+                        <i class="fa-solid fa-cart-shopping"></i> <span>Agregar</span>
+                    </button>
+                </div>
             `;
         } else {
             // PRIVATE: Sales Counter
@@ -680,31 +714,112 @@ function renderCreatorProducts(products) {
     const cards = ui.creatorProductsGrid.querySelectorAll('.product-mini-card');
     cards.forEach(card => {
         card.onclick = (e) => {
-            // Prevent opening modal if clicking share button
-            if (e.target.closest('.btn-share-product')) return;
+            // Prevent opening modal if clicking action buttons
+            if (e.target.closest('.btn-share-product') || e.target.closest('.btn-profile-action')) return;
 
             const pid = card.getAttribute('data-product-id');
-            const product = products.find(p => p.id === pid);
+            const product = productsRef.find(p => p.id === pid);
             if (product) {
                 ProductModal.open(product);
             }
         };
     });
 
-    // Add click listeners for Share Buttons (Public View)
+    // === PUBLIC VIEW: Setup Action Buttons ===
     if (isPublicView) {
+        // Share Buttons
         const shareBtns = ui.creatorProductsGrid.querySelectorAll('.btn-share-product');
         shareBtns.forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 const pid = btn.getAttribute('data-product-id');
-                const product = products.find(p => p.id === pid);
+                const product = productsRef.find(p => p.id === pid);
                 if (product) {
                     handleShare(product);
                 }
             };
         });
+
+        // Action Buttons (ownership-aware)
+        const actionBtns = ui.creatorProductsGrid.querySelectorAll('.btn-profile-action');
+        actionBtns.forEach(btn => {
+            const pid = btn.getAttribute('data-product-id');
+            const product = productsRef.find(p => p.id === pid);
+
+            // Set initial visual state
+            updateMiniCardButton(btn, pid);
+
+            // Set click behavior
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (!product) return;
+
+                // Already purchased -> go to library
+                if (purchasedProductIds.has(pid)) {
+                    window.location.href = 'biblioteca.html';
+                    return;
+                }
+
+                // Free -> trigger download flow
+                if (product.es_gratis) {
+                    handleFreeDownloadFromProfile(product, btn);
+                    return;
+                }
+
+                // In cart -> open cart
+                const inCart = window.appState?.cart?.some(i => i.id === pid);
+                if (inCart) {
+                    window.dispatchEvent(new CustomEvent('toggle-cart'));
+                    return;
+                }
+
+                // Default -> add to cart
+                if (typeof window.addToCart === 'function') {
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+                    window.addToCart(product);
+                }
+            };
+        });
     }
+}
+
+/**
+ * Updates a mini-card action button to reflect the current ownership/cart state.
+ * Mirrors the logic from catalogo.js's updateButtonState().
+ */
+function updateMiniCardButton(btn, productId) {
+    if (!btn) return;
+
+    // Priority 1: Already purchased
+    if (purchasedProductIds.has(productId)) {
+        btn.className = 'btn-profile-action h-6 px-2.5 flex-shrink-0 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all whitespace-nowrap z-20 bg-indigo-50 text-indigo-600 border border-indigo-200 cursor-pointer';
+        btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> <span>Biblioteca</span>';
+        return;
+    }
+
+    // Priority 2: Free product
+    // Find the product data from the card's context
+    const card = btn.closest('.product-mini-card');
+    const priceEl = card?.querySelector('.font-black');
+    const isFree = priceEl?.textContent?.trim() === 'GRATIS';
+
+    if (isFree) {
+        btn.className = 'btn-profile-action h-6 px-2.5 flex-shrink-0 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95 whitespace-nowrap z-20 bg-emerald-600 text-white hover:bg-emerald-700';
+        btn.innerHTML = '<i class="fa-solid fa-download"></i> <span>Descargar</span>';
+        return;
+    }
+
+    // Priority 3: In cart
+    const inCart = window.appState?.cart?.some(i => i.id === productId);
+    if (inCart) {
+        btn.className = 'btn-profile-action h-6 px-2.5 flex-shrink-0 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all whitespace-nowrap z-20 bg-emerald-50 text-emerald-600 border border-emerald-200';
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Añadido</span>';
+        return;
+    }
+
+    // Default: Available to add
+    btn.className = 'btn-profile-action h-6 px-2.5 flex-shrink-0 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95 whitespace-nowrap z-20 bg-slate-900 text-white hover:bg-indigo-600';
+    btn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> <span>Agregar</span>';
 }
 
 async function handleShare(product) {
@@ -979,6 +1094,109 @@ function showError(message) {
 function showSuccess(message) {
     // Simple alert for now - could be replaced with toast
     console.log('✅ ' + message);
+}
+
+/**
+ * Fetches the logged-in user's completed orders to build a Set of owned product IDs.
+ * Exposes the Set via window.appState.purchasedProductIds for ProductModal compatibility.
+ */
+async function fetchUserPurchases(uid) {
+    try {
+        const purchasesQuery = query(
+            collection(db, "orders"),
+            where("user_id", "==", uid),
+            where("status", "==", "completed")
+        );
+        const snapshot = await getDocs(purchasesQuery);
+
+        purchasedProductIds.clear();
+
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.items && Array.isArray(data.items)) {
+                data.items.forEach(item => {
+                    if (item.id) purchasedProductIds.add(item.id);
+                });
+            }
+        });
+
+        // Expose globally for ProductModal
+        window.appState = window.appState || {};
+        window.appState.purchasedProductIds = purchasedProductIds;
+
+        console.log(`[Profile Purchases] Loaded ${purchasedProductIds.size} purchased items.`);
+
+    } catch (e) {
+        console.error("Error loading user purchases:", e);
+    }
+}
+
+/**
+ * Handles free download from the profile page.
+ * Creates a completed order and redirects to library.
+ */
+async function handleFreeDownloadFromProfile(product, btnElement) {
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert("Para descargar materiales gratuitos, por favor inicia sesión o regístrate.");
+        const intent = {
+            type: 'open_product',
+            productId: product.id,
+            returnUrl: window.location.href
+        };
+        sessionStorage.setItem('pending_intent', JSON.stringify(intent));
+        window.location.href = '../auth/login.html?mode=register';
+        return;
+    }
+
+    const originalText = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+    try {
+        const orderData = {
+            user_id: user.uid,
+            user_email: user.email,
+            user_name: user.displayName || "Usuario",
+            items: [{
+                id: product.id,
+                titulo: product.titulo,
+                precio: 0,
+                imagen: product.imagenes_preview?.[0] || null,
+                tipo: product.tipo_archivo || 'Digital',
+                autor_id: product.creador_uid || 'unknown',
+                url_archivo: product.url_archivo || null,
+                url_acceso: product.url_acceso || null,
+                tipo_archivo: product.tipo_archivo || 'Digital',
+                tipo_entrega: product.tipo_entrega || 'local_download'
+            }],
+            original_total: 0,
+            discount_amount: 0,
+            final_total: 0,
+            currency: 'COP',
+            status: 'completed',
+            payment_method: 'free_download',
+            created_at: serverTimestamp(),
+            platform: 'web_profile_direct'
+        };
+
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+        console.log("[Profile] Free download registered:", docRef.id);
+
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
+
+        setTimeout(() => {
+            alert("¡Material añadido a tu biblioteca!");
+            window.location.href = 'biblioteca.html';
+        }, 500);
+
+    } catch (error) {
+        console.error("Error processing free download:", error);
+        alert("Hubo un error al procesar la descarga. Intenta nuevamente.");
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalText;
+    }
 }
 
 /**

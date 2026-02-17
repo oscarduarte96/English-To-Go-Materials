@@ -8,9 +8,9 @@
     <link rel="icon" href="../assets/img/favicon.ico">
 
     <!-- CSS Global -->
-    <link rel="stylesheet" href="../assets/css/variables.css?v=3.0">
-    <link rel="stylesheet" href="../assets/css/global.css?v=3.0">
-    <link rel="stylesheet" href="../assets/css/responsive.css?v=3.0">
+    <link rel="stylesheet" href="../assets/css/variables.css?v=3.1">
+    <link rel="stylesheet" href="../assets/css/global.css?v=3.1">
+    <link rel="stylesheet" href="../assets/css/responsive.css?v=3.1">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -140,6 +140,14 @@
             border: 2px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+
+        /* FIX: Mobile Header Overlap & Z-Index */
+        @media (max-width: 640px) {
+            main {
+                padding-top: 140px !important;
+                /* Aumentar espacio para el header fijo */
+            }
+        }
     </style>
 </head>
 
@@ -238,7 +246,8 @@
                 </div>
 
                 <!-- Sección 2: Clasificación -->
-                <div class="card relative z-50 md:z-auto" style="overflow: visible;">
+                <!-- FIX: Z-Index ajustado para que los dropdowns se vean sobre la siguiente sección en Desktop -->
+                <div class="card relative z-50 md:z-30" style="overflow: visible;">
                     <div
                         class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between rounded-t-xl">
                         <div class="flex items-center gap-3">
@@ -258,7 +267,8 @@
                     <!-- Filtros Principales -->
                     <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Nivel -->
-                        <div class="relative z-30 md:z-auto" id="filter-levels">
+                        <!-- Nivel -->
+                        <div class="relative z-[60] md:z-auto" id="filter-levels">
                             <label class="block text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
                                 Nivel (CEFR)
                             </label>
@@ -269,7 +279,8 @@
                         </div>
 
                         <!-- Habilidad -->
-                        <div class="relative z-20 md:z-auto" id="filter-skills">
+                        <!-- Habilidad -->
+                        <div class="relative z-[50] md:z-auto" id="filter-skills">
                             <label class="block text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
                                 Habilidad Principal
                             </label>
@@ -280,7 +291,8 @@
                         </div>
 
                         <!-- Tipo de Recurso -->
-                        <div class="relative z-10 md:z-auto" id="filter-types">
+                        <!-- Tipo de Recurso -->
+                        <div class="relative z-[40] md:z-auto" id="filter-types">
                             <label class="block text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
                                 Tipo de Recurso
                             </label>
@@ -299,7 +311,8 @@
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Exámenes -->
-                            <div class="relative z-30 md:z-auto md:col-span-2" id="filter-exams">
+                            <!-- Exámenes -->
+                            <div class="relative z-[30] md:z-auto md:col-span-2" id="filter-exams">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                                     Exámenes Internacionales
                                 </label>
@@ -310,7 +323,8 @@
                             </div>
 
                             <!-- Tiempos Verbales -->
-                            <div class="relative z-20 md:z-auto" id="filter-tenses">
+                            <!-- Tiempos Verbales -->
+                            <div class="relative z-[20] md:z-auto" id="filter-tenses">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                                     Tiempos Verbales
                                 </label>
@@ -321,7 +335,8 @@
                             </div>
 
                             <!-- Gramática -->
-                            <div class="relative z-10 md:z-auto" id="filter-grammar">
+                            <!-- Gramática -->
+                            <div class="relative z-[10] md:z-auto" id="filter-grammar">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                                     Gramática
                                 </label>
@@ -332,7 +347,8 @@
                             </div>
 
                             <!-- Contexto/Tema -->
-                            <div class="relative md:col-span-2" id="filter-context">
+                            <!-- Contexto/Tema -->
+                            <div class="relative z-0 md:col-span-2" id="filter-context">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                                     Contexto / Tema
                                 </label>
@@ -346,7 +362,8 @@
                 </div>
 
                 <!-- Sección 3: Carga de Archivos -->
-                <div class="card relative z-40 md:z-auto">
+                <!-- FIX: Z-Index menor que la sección anterior para que no la tape -->
+                <div class="card relative z-40 md:z-20">
                     <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center gap-3 rounded-t-xl">
                         <div
                             class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30">
@@ -514,11 +531,11 @@
     <app-cart-drawer></app-cart-drawer>
 
     <!-- Scripts -->
-    <script type="module" src="../assets/js/firebase-app.js?v=3.0"></script>
-    <script type="module" src="../assets/js/utils.js?v=3.0"></script>
-    <script type="module" src="../assets/js/components.js?v=3.0"></script>
-    <script type="module" src="js/guard.js?v=3.0"></script>
-    <script type="module" src="js/upload.js?v=3.0"></script>
+    <script type="module" src="../assets/js/firebase-app.js?v=3.1"></script>
+    <script type="module" src="../assets/js/utils.js?v=3.1"></script>
+    <script type="module" src="../assets/js/components.js?v=3.1"></script>
+    <script type="module" src="js/guard.js?v=3.1"></script>
+    <script type="module" src="js/upload.js?v=3.1"></script>
 
 </body>
 

@@ -9,6 +9,10 @@
  * 4. Interactions (Add to Cart, Share).
  */
 
+// 1. IMPORTACIONES
+import { db, auth } from "../../assets/js/firebase-app.js";
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
 const ProductModal = {
     elements: null,
     carouselState: {
@@ -463,10 +467,73 @@ const ProductModal = {
         }
     },
 
-    handleFreeDownload: function (product, btnElement) {
-        // Logic for free download
-        if (window.addToCart) {
-            window.open(product.url_archivo, '_blank');
+    handleFreeDownload: async function (product, btnElement) {
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("Para descargar materiales gratuitos, por favor inicia sesión o regístrate.");
+
+            // Smart Redirect: Save Intent
+            const intent = {
+                type: 'open_product',
+                productId: product.id,
+                returnUrl: window.location.href
+            };
+            sessionStorage.setItem('pending_intent', JSON.stringify(intent));
+
+            window.location.href = './auth/login.html?mode=register';
+            return;
+        }
+
+        // UI Loading
+        const originalText = btnElement.innerHTML;
+        btnElement.disabled = true;
+        btnElement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
+
+        try {
+            // Crear orden "completed" directamente
+            const orderData = {
+                user_id: user.uid,
+                user_email: user.email,
+                user_name: user.displayName || "Usuario",
+                items: [{
+                    id: product.id,
+                    titulo: product.titulo,
+                    precio: 0,
+                    imagen: (product.imagenes_preview && product.imagenes_preview.length) ? product.imagenes_preview[0] : null,
+                    tipo: product.tipo_archivo || 'Digital',
+                    autor_id: product.creador_uid || 'unknown',
+                    url_archivo: product.url_archivo || null,
+                    url_acceso: product.url_acceso || null,
+                    tipo_archivo: product.tipo_archivo || 'Digital',
+                    tipo_entrega: product.tipo_entrega || 'local_download'
+                }],
+                original_total: 0,
+                discount_amount: 0,
+                final_total: 0,
+                currency: 'COP',
+                status: 'completed',
+                payment_method: 'free_download',
+                created_at: serverTimestamp(),
+                platform: 'web_catalog_modal_direct'
+            };
+
+            const docRef = await addDoc(collection(db, "orders"), orderData);
+            console.log("Descarga registrada con ID:", docRef.id);
+
+            // Éxito visual
+            btnElement.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
+
+            setTimeout(() => {
+                alert("¡Material añadido a tu biblioteca!");
+                window.location.href = './panel/biblioteca.html';
+            }, 800);
+
+        } catch (error) {
+            console.error("Error procesando descarga:", error);
+            alert("Hubo un error al procesar la descarga. Intenta nuevamente.");
+            btnElement.disabled = false;
+            btnElement.innerHTML = originalText;
         }
     }
 };

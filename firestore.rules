@@ -5,7 +5,10 @@ service cloud.firestore {
     // Public Catalog Access
     match /products/{productId} {
       allow read: if true;
-      allow write: if false; // Admin only
+      // Allow create if user is auth and sets creator_uid to their own uid
+      allow create: if request.auth != null && request.resource.data.creador_uid == request.auth.uid;
+      // Allow update/delete if user is auth and is the creator of the existing doc
+      allow update, delete: if request.auth != null && resource.data.creador_uid == request.auth.uid;
     }
     match /creators/{creatorId} {
       allow read: if true;

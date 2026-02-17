@@ -9,8 +9,8 @@
     <link rel="icon" href="https://i.imgur.com/O1F7GGy.png" type="image/png">
 
     <!-- Global Assets -->
-    <link rel="stylesheet" href="assets/css/global.css?v=3.0">
-    <script type="module" src="assets/js/components.js?v=3.0"></script>
+    <link rel="stylesheet" href="assets/css/global.css?v=3.1">
+    <script type="module" src="assets/js/components.js?v=3.1"></script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,6 +170,101 @@
         .calendar-day.empty {
             cursor: default;
         }
+
+        /* ===== DESKTOP REFACTOR: Columna Izquierda "Paso 1" ===== */
+        @media (min-width: 1024px) {
+
+            /* Ampliar contenedor interno de la columna */
+            .checkout-step1>.max-w-md {
+                max-width: 32rem;
+                /* de 28rem a 32rem */
+            }
+
+            /* Ajuste de alineación y padding para coincidir con la columna derecha */
+            .checkout-step1 {
+                padding: 1.5rem 1.5rem !important;
+                /* Reducido de 2.5rem para alinear con "Paso 2" */
+                justify-content: flex-start !important;
+                /* Eliminar centrado vertical (flex-start) */
+            }
+
+            /* Título "Paso 1: Envía" — más grande y con margen inferior */
+            .checkout-step1 h2 {
+                font-size: 1.875rem;
+                /* ~text-3xl */
+                margin-bottom: 1.5rem;
+            }
+
+            /* Tarjeta de instrucciones — texto más legible */
+            .checkout-step1 .bg-slate-50.rounded-2xl p.text-xs {
+                font-size: 0.875rem;
+                /* text-sm */
+                line-height: 1.5;
+                margin-bottom: 0.875rem;
+            }
+
+            /* Opción Bre-B — un poco más grande */
+            .checkout-step1 .bg-white.rounded-xl.border .text-xs.font-black {
+                font-size: 0.875rem;
+            }
+
+            .checkout-step1 .bg-white.rounded-xl.border .text-xs.font-medium {
+                font-size: 0.8125rem;
+            }
+
+            /* Espaciado entre tarjetas */
+            .checkout-step1 .text-center.mb-6,
+            .checkout-step1 .text-center.w-full {
+                margin-bottom: 1.75rem;
+            }
+
+            /* Tarjeta del monto — más padding y presencia */
+            .checkout-step1 .relative.group {
+                margin-bottom: 1.75rem;
+            }
+
+            .checkout-step1 .relative.group .relative.bg-white {
+                padding: 2rem 1.5rem;
+            }
+
+            /* Etiqueta "MONTO EXACTO" — más visible */
+            .checkout-step1 .text-\[10px\].font-bold.text-slate-400 {
+                font-size: 0.6875rem;
+                /* 11px */
+                letter-spacing: 0.1em;
+            }
+
+            /* Monto $ principal — más grande */
+            .checkout-step1 #display-amount {
+                font-size: 3.5rem;
+            }
+
+            /* Ref # abajo del monto */
+            .checkout-step1 #order-ref-display {
+                font-size: 0.6875rem;
+            }
+
+            /* Tarjeta llave — más padding y número más grande */
+            .checkout-step1 .cursor-pointer.group .bg-slate-50.rounded-xl {
+                padding: 1.25rem 1.5rem;
+            }
+
+            /* Etiqueta "ENVIAR A ESTA LLAVE" */
+            .checkout-step1 .text-\[10px\].font-bold.text-purple-600 {
+                font-size: 0.75rem;
+                /* 12px */
+            }
+
+            /* Número de llave */
+            .checkout-step1 #numero-llave {
+                font-size: 2rem;
+            }
+
+            /* Texto "toca para copiar" */
+            .checkout-step1 .text-\[10px\].text-slate-400.mt-0\.5 {
+                font-size: 0.6875rem;
+            }
+        }
     </style>
 </head>
 
@@ -215,7 +310,7 @@
                     <!-- COLUMNA 1: INSTRUCCIONES DE PAGO -->
                     <!-- Updated to White Theme & Compact Layout -->
                     <div
-                        class="p-6 md:p-8 lg:p-6 flex flex-col items-center justify-center bg-white border-b md:border-b-0 md:border-r border-slate-200 relative lg:h-full overflow-hidden">
+                        class="checkout-step1 p-6 md:p-8 lg:p-6 flex flex-col items-center justify-center bg-white border-b md:border-b-0 md:border-r border-slate-200 relative lg:h-full overflow-hidden">
 
                         <!-- Contenido escalado para pantallas grandes -->
                         <div class="w-full max-w-md flex flex-col items-center">
@@ -312,7 +407,7 @@
                         <!-- PANTALLA 1: FORMULARIO -->
                         <!-- Scrollbar visible solo si es estrictamente necesario -->
                         <div id="form-content"
-                            class="p-6 md:p-8 lg:p-6 h-full flex flex-col justify-center w-full animate-fade-in max-w-2xl mx-auto lg:overflow-y-auto custom-scrollbar">
+                            class="p-6 md:p-8 lg:p-6 lg:pb-32 h-full flex flex-col justify-center w-full animate-fade-in max-w-2xl mx-auto lg:overflow-y-auto custom-scrollbar">
                             <div class="mb-6">
                                 <h2 class="text-2xl font-black text-slate-800 mb-2">Paso 2: Reporta</h2>
                                 <p class="text-slate-500 text-sm leading-relaxed">
@@ -323,6 +418,21 @@
                             </div>
 
                             <form id="payment-form" class="space-y-4">
+
+                                <!-- WARNING BLOCK: MOVED AND STYLED -->
+                                <div
+                                    class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl mb-6 shadow-sm flex gap-3 items-start animate-fade-in">
+                                    <div class="text-2xl mt-0.5">⚠️</div>
+                                    <div>
+                                        <p class="text-amber-900 font-black text-base mb-1">IMPORTANTE:</p>
+                                        <p class="text-amber-800 text-sm font-medium leading-relaxed">
+                                            Ingresa la <strong>fecha y hora exactas</strong> tal cual aparecen en tu
+                                            comprobante bancario.
+                                            <br><span class="text-xs opacity-80">Si los datos no coinciden, el sistema
+                                                no podrá verificar tu pago.</span>
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <!-- 1. NOMBRE COMPLETO -->
                                 <div class="space-y-2">
@@ -456,11 +566,7 @@
                                     </div>
                                 </div>
 
-                                <p class="text-xs text-slate-500 mt-2 text-center border-t border-slate-200 pt-4">
-                                    ⚠️ Importante: Ingresa la fecha y hora <strong
-                                        class="text-slate-700">exactas</strong> que aparecen en tu
-                                    comprobante bancario.
-                                </p>
+
 
                                 <button type="submit" id="btn-pre-submit"
                                     class="btn-primary-action w-full py-3 rounded-xl text-white font-bold text-lg tracking-wide shadow-lg flex items-center justify-center gap-2 mt-4">
@@ -757,10 +863,17 @@
                 <svg class="w-5 h-5 text-slate-400 transition-transform duration-200 group-hover:text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             `;
 
+            // Portal Menu - FIXED positioning appended to BODY
             const menu = document.createElement('div');
-            menu.className = 'hidden absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] max-h-60 overflow-y-auto z-50 custom-scrollbar';
+            menu.id = 'custom-bank-menu';
+            // Start hidden, fixed position, high z-index
+            menu.className = 'hidden fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-y-auto custom-scrollbar';
+
+            // Append directly to body to escape any overflow:hidden parents
+            document.body.appendChild(menu);
 
             const buildOptions = () => {
+                menu.innerHTML = '';
                 Array.from(select.children).forEach(child => {
                     if (child.tagName === 'OPTGROUP') {
                         const label = document.createElement('div');
@@ -779,7 +892,8 @@
                 const item = document.createElement('div');
                 item.className = 'px-4 py-3 text-base text-slate-700 hover:bg-purple-50 hover:text-purple-700 cursor-pointer transition-colors border-b border-slate-100 last:border-0 active:bg-purple-100';
                 item.textContent = option.text;
-                item.onclick = () => {
+                item.onclick = (e) => {
+                    e.stopPropagation(); // Stop propagation
                     select.value = option.value;
                     trigger.querySelector('#selected-text').textContent = option.text;
                     trigger.querySelector('#selected-text').classList.remove('text-slate-400');
@@ -792,34 +906,88 @@
 
             buildOptions();
 
-            trigger.onclick = (e) => {
-                e.stopPropagation();
-                const isOpen = !menu.classList.contains('hidden');
-                menu.classList.toggle('hidden');
-                const icon = trigger.querySelector('svg');
-                if (!isOpen) {
-                    icon.style.transform = 'rotate(180deg)';
-                    trigger.classList.add('ring-2', 'ring-purple-500/20');
+            const updateMenuPosition = () => {
+                const rect = trigger.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const spaceBelow = viewportHeight - rect.bottom - 10; // 10px padding
+                const spaceAbove = rect.top - 10;
+
+                // Reset styles
+                menu.style.position = 'fixed';
+                menu.style.width = `${rect.width}px`;
+                menu.style.left = `${rect.left}px`;
+
+                // Logic: Prefer bottom, unless very tight (< 200px) and top has more space
+                if (spaceBelow < 200 && spaceAbove > spaceBelow) {
+                    // Show above
+                    menu.style.top = 'auto';
+                    menu.style.bottom = `${viewportHeight - rect.top + 5}px`;
+                    menu.style.maxHeight = `${Math.min(300, spaceAbove)}px`;
                 } else {
-                    icon.style.transform = 'rotate(0deg)';
-                    trigger.classList.remove('ring-2', 'ring-purple-500/20');
+                    // Show below
+                    menu.style.top = `${rect.bottom + 5}px`;
+                    menu.style.bottom = 'auto';
+                    menu.style.maxHeight = `${Math.min(300, spaceBelow)}px`; // Cap at 300px or available space
                 }
             };
 
             const closeMenu = () => {
-                menu.classList.add('hidden');
-                trigger.querySelector('svg').style.transform = 'rotate(0deg)';
-                trigger.classList.remove('ring-2', 'ring-purple-500/20');
+                if (!menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    const icon = trigger.querySelector('svg');
+                    if (icon) icon.style.transform = 'rotate(0deg)';
+                    trigger.classList.remove('ring-2', 'ring-purple-500/20');
+                }
             };
 
+            trigger.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const isOpen = !menu.classList.contains('hidden');
+
+                // Close others
+                document.querySelectorAll('.fixed.z-\\[9999\\]').forEach(el => {
+                    if (el !== menu) el.classList.add('hidden');
+                });
+
+                if (isOpen) {
+                    closeMenu();
+                } else {
+                    menu.classList.remove('hidden');
+                    updateMenuPosition(); // Recalculate position
+
+                    const icon = trigger.querySelector('svg');
+                    if (icon) icon.style.transform = 'rotate(180deg)';
+                    trigger.classList.add('ring-2', 'ring-purple-500/20');
+                }
+            };
+
+            // Close interactions
+            // FIXED: Only close on window scroll, NOT on menu scroll
+            window.addEventListener('scroll', (e) => {
+                const menuEl = document.getElementById('custom-bank-menu');
+                if (menuEl && (e.target === menuEl || menuEl.contains(e.target))) {
+                    return; // Ignore scroll inside menu
+                }
+                closeMenu();
+            }, true);
+
+            window.addEventListener('resize', closeMenu);
+
             document.addEventListener('click', (e) => {
-                if (!wrapper.contains(e.target)) closeMenu();
+                if (!wrapper.contains(e.target)) {
+                    // Check if click is inside the portal menu (since it's not in wrapper)
+                    const menuEl = document.getElementById('custom-bank-menu');
+                    if (menuEl && !menuEl.contains(e.target)) {
+                        closeMenu();
+                    }
+                }
             });
 
             select.parentNode.insertBefore(wrapper, select);
             wrapper.appendChild(select);
             wrapper.appendChild(trigger);
-            wrapper.appendChild(menu);
+            // Note: Menu is appended to document.body, not wrapper
         }
 
         function copiarNumero() {
