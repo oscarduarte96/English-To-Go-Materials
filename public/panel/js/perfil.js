@@ -619,6 +619,7 @@ async function loadCreatorData() {
 
         let totalSales = 0;
         let totalIncome = 0;
+        const salesByProduct = {}; // NEW: Track sales per product
 
         ordersSnapshot.forEach(orderDoc => {
             const orderData = orderDoc.data();
@@ -632,6 +633,11 @@ async function loadCreatorData() {
                     if (item.autor_id === currentUser.uid) {
                         totalSales++;
                         totalIncome += (Number(item.precio) || 0);
+
+                        // NEW: Increment product specific sales count
+                        if (item.id) {
+                            salesByProduct[item.id] = (salesByProduct[item.id] || 0) + 1;
+                        }
                     }
                 });
             }
@@ -639,8 +645,24 @@ async function loadCreatorData() {
 
         console.log(`[Profile] Stats loaded: ${totalSales} sales, $${totalIncome}`);
 
-        // Update UI
+        // Update UI - Total Stats
         ui.statSales.textContent = totalSales;
+
+        // NEW: Update Sales Count on Individual Product Cards
+        // We do this after calculating totals to avoid multiple DOM updates inside the loop
+        for (const [productId, count] of Object.entries(salesByProduct)) {
+            // Find the card for this product
+            const salesTextElement = document.querySelector(`.product-mini-card[data-product-id="${productId}"] .fa-shopping-cart`)?.parentElement;
+
+            if (salesTextElement) {
+                // Update text, preserving the icon
+                salesTextElement.innerHTML = `<i class="fa-solid fa-shopping-cart mr-1"></i> ${count} venta${count !== 1 ? 's' : ''}`;
+
+                // Optional: Highlight active products
+                salesTextElement.classList.add('text-indigo-600', 'font-medium');
+                salesTextElement.classList.remove('text-slate-400');
+            }
+        }
 
         // Format Income
         if (window.utils && window.utils.formatCurrency) {

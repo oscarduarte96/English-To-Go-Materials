@@ -12,6 +12,16 @@
     <link rel="stylesheet" href="assets/css/global.css?v=3.1">
     <script type="module" src="assets/js/components.js?v=3.1"></script>
 
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        (function () {
+            // 🔥 IMPORTANTE: Reemplaza "TU_PUBLIC_KEY" con tu Public Key de EmailJS
+            // Encuéntrala en: Account > API Keys
+            emailjs.init("aaXgY6L70Q9AXKM4e");
+        })();
+    </script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -1187,6 +1197,28 @@
                     metodo: "bre_b_keys",
                     fecha_creacion: serverTimestamp()
                 });
+
+                // --- INTEGRACIÓN EMAILJS (NOTIFICACIÓN) ---
+                try {
+                    // Preparamos los parámetros para la plantilla de correo
+                    const templateParams = {
+                        to_name: currentUser.displayName || "Usuario",
+                        to_email: currentUser.email, // Email del usuario (destinatario)
+                        order_id: orderRefDisplay.textContent, // Ej: Ref: #12345678
+                        monto: displayAmount.textContent.replace('COP', '').trim(), // Ej: $ 50.000
+                        link_biblioteca: "https://materials.goenglishtogo.com/panel/biblioteca.html",
+                        message: "Hemos recibido tu reporte de pago. En breve validaremos tu transacción."
+                    };
+
+                    // 🔥 IMPORTANTE: Reemplaza con tu Service ID y Template ID de EmailJS
+                    await emailjs.send('service_t56qt3w', 'template_cq9xj5w', templateParams);
+                    console.log("📧 Correo de confirmación enviado exitosamente.");
+
+                } catch (emailError) {
+                    console.warn("⚠️ No se pudo enviar el correo de confirmación (EmailJS):", emailError);
+                    // No bloqueamos el flujo si falla el correo, solo advertimos en consola
+                }
+                // ------------------------------------------
 
                 // Opcional: Actualizar estado de la orden a 'verificando_pago' si se desea
                 // await updateDoc(doc(db, "orders", orderId), { status: 'verificando_pago' });

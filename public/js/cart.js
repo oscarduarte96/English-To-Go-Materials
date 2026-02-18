@@ -722,6 +722,41 @@ async function handleZeroCostCheckout() {
         const docRef = await addDoc(collection(db, "orders"), orderData);
         console.log("🎁 Acceso canjeado con ID: ", docRef.id);
 
+        // --- INTEGRACIÓN EMAILJS (NOTIFICACIÓN) ---
+        try {
+            // Cargar EmailJS dinámicamente si no existe (para páginas donde no está en el head)
+            if (typeof emailjs === 'undefined') {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js";
+                    script.onload = () => {
+                        // Inicializar
+                        window.emailjs.init("aaXgY6L70Q9AXKM4e"); // 🔥 REEMPLAZAR
+                        resolve();
+                    };
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+
+            const templateParams = {
+                to_name: user.displayName || "Usuario",
+                to_email: user.email,
+                order_id: docRef.id,
+                monto: "0 (Cupón 100%)",
+                link_biblioteca: "https://materials.goenglishtogo.com/panel/biblioteca.html",
+                message: `Canje exitoso del cupón ${coupon.code}. ¡Disfruta tus materiales!`
+            };
+
+            // 🔥 IMPORTANTE: Reemplaza con tu Service ID y Template ID
+            await window.emailjs.send('service_t56qt3w', 'template_cq9xj5w', templateParams);
+            console.log("📧 Correo de canje enviado exitosamente.");
+
+        } catch (emailError) {
+            console.warn("⚠️ No se pudo enviar el correo de confirmación (EmailJS):", emailError);
+        }
+        // ------------------------------------------
+
         if (coupon.docId) {
             try {
                 const couponRef = doc(db, "coupons", coupon.docId);

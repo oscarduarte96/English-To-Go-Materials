@@ -114,6 +114,7 @@ async function loadPortfolioData() {
         // 2. Fetch Orders (Might fail if Rules/Auth are strict)
         let totalSales = 0;
         let totalIncome = 0;
+        const salesByProduct = {}; // NEW: Track sales per product
 
         try {
             const ordersQuery = query(
@@ -139,10 +140,22 @@ async function loadPortfolioData() {
                             // CORREGIDO: item.precio (no item.price)
                             const precio = Number(item.precio) || 0;
                             totalIncome += precio;
+
+                            // NEW: Increment product specific sales count
+                            if (item.id) {
+                                salesByProduct[item.id] = (salesByProduct[item.id] || 0) + 1;
+                            }
                         }
                     });
                 }
             });
+
+            // NEW: Enrich products with sales count
+            allProducts = allProducts.map(p => ({
+                ...p,
+                ventas: salesByProduct[p.id] || 0
+            }));
+
         } catch (orderErr) {
             console.error("Error loading orders (Permissions?):", orderErr);
             // Don't crash the whole page, just show 0 sales
@@ -236,6 +249,13 @@ function renderInventory() {
             ? '<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Activo</span>'
             : '<span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Inactivo</span>';
 
+        // Sales Counter HTML
+        const salesHtml = `
+            <span class="text-xs text-slate-500 font-medium flex items-center gap-1" title="Ventas totales">
+                <i class="fa-solid fa-shopping-cart text-slate-400"></i> ${product.ventas || 0}
+            </span>
+        `;
+
         if (currentView === 'list') {
             // LIST VIEW
             card.className = "bg-white rounded-xl border border-slate-100 shadow-sm p-3 flex items-center justify-between gap-4 transition-all hover:shadow-md hover:border-slate-200 cursor-pointer group";
@@ -244,9 +264,13 @@ function renderInventory() {
                     <img src="${imgSrc}" alt="" class="w-16 h-16 rounded-lg object-cover bg-slate-100 flex-shrink-0">
                     <div class="min-w-0">
                         <h3 class="font-bold text-slate-800 text-sm md:text-base truncate group-hover:text-indigo-600 transition-colors" title="${product.titulo}">${product.titulo}</h3>
-                        <div class="flex items-center gap-2 mt-1">
+                        <div class="flex items-center gap-2 mt-1 flex-wrap">
                             ${statusBadge}
-                            <span class="text-xs text-slate-400 font-medium">${priceText}</span>
+                            <span class="text-xs text-slate-400 font-medium border-r border-slate-200 pr-2 mr-1">${priceText}</span>
+                            
+                            <!-- Sales Counter -->
+                            ${salesHtml}
+
                             <span class="hidden sm:inline-block text-[10px] text-slate-400 border-l border-slate-200 pl-2 ml-1">
                                 <i class="fa-regular fa-calendar mr-1"></i> ${dateStr}
                             </span>
@@ -284,7 +308,11 @@ function renderInventory() {
                     <h3 class="font-bold text-slate-800 text-base leading-snug mb-1 line-clamp-2 group-hover:text-indigo-600 transition-colors" title="${product.titulo}">
                         ${product.titulo}
                     </h3>
-                    <p class="text-sm text-slate-500 mb-4">${priceText}</p>
+                    
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-sm text-slate-500">${priceText}</p>
+                        ${salesHtml}
+                    </div>
 
                     <div class="mt-auto flex items-center gap-2 pt-3 border-t border-slate-100">
                         <!-- Share Button -->
