@@ -9,10 +9,11 @@
 // 1. IMPORTACIONES
 import { db, auth } from "../../assets/js/firebase-app.js";
 import {
-    collection, getDocs, query, orderBy, where, addDoc, serverTimestamp, doc, getDoc
+    collection, getDocs, query, orderBy, where, addDoc, serverTimestamp, doc, getDoc, limit, startAfter
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 import ProductModal from "./product-modal.js";
+import OrderService from "./services/OrderService.js";
 
 // 2. CONFIGURACIÓN (CATEGORÍAS)
 const CATEGORIAS = {
@@ -42,10 +43,11 @@ const localState = {
         context: "",
         exam: "",
         teacherId: null,
-        teacherId: null,
         price: ""
     },
-    purchasedProductIds: new Set() // IDs de productos ya comprados
+    purchasedProductIds: new Set(), // IDs de productos ya comprados
+    lastVisibleProduct: null, // Paginación: último doc cargado
+    hasMoreProducts: true // Paginación: si hay más por cargar
 };
 
 // 4. REFERENCIAS AL DOM
@@ -176,9 +178,9 @@ function createLoadMoreButton() {
     ui.loadMoreContainer = container;
 
     const btn = document.getElementById('btnLoadMore');
-    if (btn) btn.onclick = () => {
-        localState.visibleLimit += localState.pageSize;
-        renderGrid();
+    if (btn) btn.onclick = async () => {
+        // En lugar de paginacion virtual, descargamos la siguiente pagina
+        await fetchAllProducts(true);
     };
 }
 
@@ -267,43 +269,82 @@ function setupEvents() {
 
 
 /**
- * 6. LÓGICA DE DATOS (PRODUCTOS)
+ * 6. LÓGICA DE DATOS (PRODUCTOS) - Paginada
  */
-async function fetchAllProducts() {
+async function fetchAllProducts(isLoadMore = false) {
     if (localState.isLoading) return;
+    if (isLoadMore && !localState.hasMoreProducts) return;
+
     localState.isLoading = true;
-    // ui.grid.innerHTML = ... removed for skeleton preservation
+
+    // Si NO es loadMore (ej. inicio o cambio de filtro radical no soportado aun), reiniciamos
+    if (!isLoadMore) {
+        localState.allProducts = [];
+        localState.lastVisibleProduct = null;
+        localState.hasMoreProducts = true;
+    }
 
     try {
-        const q = query(collection(db, "products"), orderBy("fecha_creacion", "desc"));
+        let q;
+
+        // Paginación Básica (Ignora filtros complejos por simplificacion de firestore en este fix rapido, 
+        // los aplica en memoria pero descarga por lotes)
+        if (isLoadMore && localState.lastVisibleProduct) {
+            q = query(
+                collection(db, "products"),
+                orderBy("fecha_creacion", "desc"),
+                startAfter(localState.lastVisibleProduct),
+                limit(localState.pageSize)
+            );
+        } else {
+            q = query(
+                collection(db, "products"),
+                orderBy("fecha_creacion", "desc"),
+                limit(localState.pageSize)
+            );
+        }
+
         const snapshot = await getDocs(q);
 
-        localState.allProducts = [];
+        if (snapshot.empty) {
+            localState.hasMoreProducts = false;
+        } else {
+            localState.lastVisibleProduct = snapshot.docs[snapshot.docs.length - 1];
 
-        snapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            localState.allProducts.push({
-                id: docSnap.id,
-                ...data,
-                _img: (data.imagenes_preview && data.imagenes_preview.length) ? data.imagenes_preview[0] : null,
-                _searchString: [
-                    data.titulo,
-                    data.descripcion,
-                    data.creador_nombre || data.autor || "English To Go",
-                    Array.isArray(data.keywords) ? data.keywords.join(" ") : ""
-                ].join(" ").toLowerCase()
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                localState.allProducts.push({
+                    id: docSnap.id,
+                    ...data,
+                    _img: (data.imagenes_preview && data.imagenes_preview.length) ? data.imagenes_preview[0] : null,
+                    _searchString: [
+                        data.titulo,
+                        data.descripcion,
+                        data.creador_nombre || data.autor || "English To Go",
+                        Array.isArray(data.keywords) ? data.keywords.join(" ") : ""
+                    ].join(" ").toLowerCase()
+                });
             });
-        });
+
+            // Si trajimos menos de los pedidos, ya no hay mas
+            if (snapshot.docs.length < localState.pageSize) {
+                localState.hasMoreProducts = false;
+            }
+        }
 
         localState.isLoading = false;
         applyFilters();
 
-        // Deep Link: Abrir modal si hay un ID de producto en la URL
-        checkDeepLink();
+        // Deep Link: Abrir modal si hay un ID de producto en la URL (Solo en carga inicial)
+        if (!isLoadMore) {
+            checkDeepLink();
+        }
 
     } catch (e) {
         console.error("Error cargando productos:", e);
-        ui.grid.innerHTML = '<div class="col-span-full text-center text-red-500">Hubo un error cargando los materiales. Por favor recarga la página.</div>';
+        if (!isLoadMore) {
+            ui.grid.innerHTML = '<div class="col-span-full text-center text-red-500">Hubo un error cargando los materiales. Por favor recarga la página.</div>';
+        }
     } finally {
         localState.isLoading = false;
     }
@@ -333,7 +374,8 @@ function checkDeepLink() {
  */
 function applyFilters() {
     const f = localState.filters;
-    localState.visibleLimit = localState.pageSize;
+    // Ya no usamos visibleLimit porque mostramos todo lo que hay en allProducts (paginado de BD)
+    // localState.visibleLimit = localState.pageSize;
 
     // --- TEACHER DISCOVERY: Search teachers by name ---
     if (f.search && f.search.length >= 2 && localState.allTeachers.length > 0) {
@@ -432,7 +474,8 @@ function renderGrid() {
     ui.noResults.classList.add('hidden');
     ui.noResults.classList.remove('flex');
 
-    const visibleProducts = localState.filteredProducts.slice(0, localState.visibleLimit);
+    // Mostramos todos los productos filtrados, ya que la paginacion viene de BD
+    const visibleProducts = localState.filteredProducts;
     ui.grid.innerHTML = "";
 
     visibleProducts.forEach(p => {
@@ -543,7 +586,9 @@ function renderGrid() {
     });
 
     if (ui.loadMoreContainer) {
-        ui.loadMoreContainer.classList.toggle('hidden', visibleProducts.length >= totalFiltered);
+        // Ocultar si ya no hay mas productos o si hay filtros activos (filtro en memoria rompe la visualizacion pacinada simple)
+        const hasFilters = localState.filters.search || localState.filters.teacherId || localState.filters.level || localState.filters.skill || localState.filters.grammar || localState.filters.type || localState.filters.context || localState.filters.exam || localState.filters.price;
+        ui.loadMoreContainer.classList.toggle('hidden', !localState.hasMoreProducts || hasFilters);
     }
 }
 
@@ -739,73 +784,7 @@ async function handleShare(product) {
  * PROCESO DE DESCARGA DIRECTA (Solo Gratuitos)
  */
 async function handleFreeDownload(product, btnElement) {
-    const user = auth.currentUser;
-
-    if (!user) {
-        alert("Para descargar materiales gratuitos, por favor inicia sesión o regístrate.");
-
-        // Smart Redirect: Save Intent
-        const intent = {
-            type: 'open_product',
-            productId: product.id,
-            returnUrl: window.location.href
-        };
-        sessionStorage.setItem('pending_intent', JSON.stringify(intent));
-
-        window.location.href = './auth/login.html?mode=register';
-        return;
-    }
-
-    // UI Loading
-    const originalText = btnElement.innerHTML;
-    btnElement.disabled = true;
-    btnElement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
-
-    try {
-        // Crear orden "completed" directamente
-        const orderData = {
-            user_id: user.uid,
-            user_email: user.email,
-            user_name: user.displayName || "Usuario",
-            items: [{
-                id: product.id,
-                titulo: product.titulo,
-                precio: 0,
-                imagen: product._img || null,
-                tipo: product.tipo_archivo || 'Digital',
-                autor_id: product.creador_uid || 'unknown',
-                url_archivo: product.url_archivo || null,
-                url_acceso: product.url_acceso || null,
-                tipo_archivo: product.tipo_archivo || 'Digital',
-                tipo_entrega: product.tipo_entrega || 'local_download'
-            }],
-            original_total: 0,
-            discount_amount: 0,
-            final_total: 0,
-            currency: 'COP',
-            status: 'completed',
-            payment_method: 'free_download',
-            created_at: serverTimestamp(),
-            platform: 'web_catalog_direct'
-        };
-
-        const docRef = await addDoc(collection(db, "orders"), orderData);
-        console.log("Descarga registrada con ID:", docRef.id);
-
-        // Éxito visual
-        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
-
-        setTimeout(() => {
-            alert("¡Material añadido a tu biblioteca!");
-            window.location.href = './panel/biblioteca.html';
-        }, 500);
-
-    } catch (error) {
-        console.error("Error procesando descarga:", error);
-        alert("Hubo un error al procesar la descarga. Intenta nuevamente.");
-        btnElement.disabled = false;
-        btnElement.innerHTML = originalText;
-    }
+    await OrderService.handleFreeDownload(product, btnElement, 'web_catalog_direct');
 }
 
 /**

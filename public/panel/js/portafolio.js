@@ -17,6 +17,7 @@ import { auth, db } from "../../assets/js/firebase-app.js";
 // ============================================================================
 let currentUser = null;
 let allProducts = [];
+let salesHistory = []; // NEW: Store sales transactions
 let productToDelete = null;
 let currentView = 'list'; // 'list' | 'grid'
 
@@ -29,6 +30,8 @@ const ui = {
     loadingState: document.getElementById('loadingState'),
     emptyState: document.getElementById('emptyState'),
     inventoryGrid: document.getElementById('inventoryGrid'),
+    // Sales Report
+    salesList: document.getElementById('salesList'),
     // Toggles
     btnViewList: document.getElementById('btnViewList'),
     btnViewGrid: document.getElementById('btnViewGrid'),
@@ -129,7 +132,21 @@ async function loadPortfolioData() {
                 // Filtrar solo órdenes completadas
                 if (orderData.status !== 'completed') return;
 
+
+                // Lógica de Ventas / Ingresos
                 if (orderData.items && Array.isArray(orderData.items)) {
+                    // Determinar factor de descuento global de la orden
+                    let discountFactor = 1;
+
+                    if (orderData.coupon_discount_percent === 100) {
+                        discountFactor = 0;
+                    } else if (orderData.coupon_discount_percent > 0) {
+                        discountFactor = 1 - (orderData.coupon_discount_percent / 100);
+                    } else if (orderData.original_total > 0 && orderData.final_total < orderData.original_total) {
+                        // Descuento fijo prorrateado (fallback)
+                        discountFactor = orderData.final_total / orderData.original_total;
+                    }
+
                     orderData.items.forEach(item => {
                         // Verificar que el item pertenece a este autor
                         const itemAutorId = String(item.autor_id);
@@ -137,18 +154,43 @@ async function loadPortfolioData() {
 
                         if (itemAutorId === currentUid) {
                             totalSales++;
-                            // CORREGIDO: item.precio (no item.price)
-                            const precio = Number(item.precio) || 0;
-                            totalIncome += precio;
+                            const precioBase = Number(item.precio) || 0;
+
+                            // Calcular Ingreso Real
+                            const ingresoReal = Math.floor(precioBase * discountFactor); // Round down for safety
+                            totalIncome += ingresoReal;
 
                             // NEW: Increment product specific sales count
                             if (item.id) {
                                 salesByProduct[item.id] = (salesByProduct[item.id] || 0) + 1;
                             }
+
+                            // NEW: Add to Sales History
+                            salesHistory.push({
+                                id: orderDoc.id,
+                                fecha: orderData.created_at,
+                                producto: item.titulo,
+                                cliente: orderData.user_name || "Cliente",
+                                email: orderData.user_email || "No email",
+                                ingreso: ingresoReal,
+                                precioOriginal: precioBase,
+                                es_canje: (discountFactor === 0),
+                                cupon: orderData.coupon_code || null
+                            });
                         }
                     });
                 }
             });
+
+            // Ordenar Historial de Ventas (Más reciente primero)
+            salesHistory.sort((a, b) => {
+                const dateA = a.fecha ? (a.fecha.toMillis ? a.fecha.toMillis() : new Date(a.fecha).getTime()) : 0;
+                const dateB = b.fecha ? (b.fecha.toMillis ? b.fecha.toMillis() : new Date(b.fecha).getTime()) : 0;
+                return dateB - dateA;
+            });
+
+            // NEW: Render Sales History
+            renderSalesHistory();
 
             // NEW: Enrich products with sales count
             allProducts = allProducts.map(p => ({
@@ -344,6 +386,120 @@ function renderInventory() {
         });
 
         ui.inventoryGrid.appendChild(card);
+    });
+}
+
+// ============================================================================
+// RENDERIZADO DEL HISTORIAL DE VENTAS
+// ============================================================================
+function renderSalesHistory() {
+    if (!ui.salesList) return;
+    ui.salesList.innerHTML = '';
+
+    if (salesHistory.length === 0) {
+        ui.salesList.innerHTML = `
+            <div class="p-8 text-center bg-slate-50 flex flex-col items-center justify-center">
+                <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-receipt text-slate-400 text-xl"></i>
+                </div>
+                <p class="text-slate-500 font-medium text-sm">Aún no tienes ventas registradas.</p>
+            </div>
+        `;
+        return;
+    }
+
+    salesHistory.forEach(sale => {
+        // Formatos
+        let dateStr = "Fecha desconocida";
+        if (sale.fecha) {
+            dateStr = window.utils?.formatDate ? window.utils.formatDate(sale.fecha) : new Date(sale.fecha).toLocaleDateString();
+        }
+
+        const ingresoTxt = window.utils?.formatCurrency ? window.utils.formatCurrency(sale.ingreso) : `$ ${sale.ingreso}`;
+        const originalTxt = window.utils?.formatCurrency ? window.utils.formatCurrency(sale.precioOriginal) : `$ ${sale.precioOriginal}`;
+
+        // Badge Logic
+        let statusBadge = '';
+        let rowClass = '';
+
+        if (sale.es_canje) {
+            statusBadge = `
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                    <i class="fa-solid fa-ticket"></i> Canje (Cupón)
+                </span>
+            `;
+            rowClass = 'bg-slate-50/50'; // Slightly dim for coupons
+        } else if (sale.ingreso < sale.precioOriginal) {
+            statusBadge = `
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                    <i class="fa-solid fa-percent"></i> Desc. Parcial
+                </span>
+            `;
+        } else {
+            statusBadge = `
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <i class="fa-solid fa-check"></i> Venta Pagada
+                </span>
+            `;
+        }
+
+        // Row HTML (Responsive: Grid on Desktop, Stack on Mobile)
+        const row = document.createElement('div');
+        row.className = `group hover:bg-slate-50 transition-colors p-4 ${rowClass}`;
+
+        row.innerHTML = `
+            <!-- Mobile View (Stack) -->
+            <div class="md:hidden flex flex-col gap-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase mb-1">${dateStr}</p>
+                        <h4 class="font-bold text-slate-800 text-sm leading-tight">${sale.producto}</h4>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-black text-slate-900 ${sale.es_canje ? 'text-purple-600' : 'text-emerald-600'}">${ingresoTxt}</p>
+                        ${sale.ingreso < sale.precioOriginal ? `<p class="text-xs text-slate-400 line-through">${originalTxt}</p>` : ''}
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between text-xs pt-3 border-t border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-[10px]">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <span class="text-slate-600 font-medium truncate max-w-[120px]" title="${sale.email}">${sale.cliente}</span>
+                    </div>
+                    <div>${statusBadge}</div>
+                </div>
+            </div>
+
+            <!-- Desktop View (Grid) -->
+            <div class="hidden md:grid grid-cols-12 gap-4 items-center text-sm">
+                <!-- Date -->
+                <div class="col-span-3 text-slate-500 font-medium flex items-center gap-2">
+                    <i class="fa-regular fa-calendar text-slate-300"></i> ${dateStr}
+                </div>
+                
+                <!-- Product -->
+                <div class="col-span-4 font-bold text-slate-700 truncate" title="${sale.producto}">
+                    ${sale.producto}
+                </div>
+                
+                <!-- Client -->
+                <div class="col-span-3 flex flex-col justify-center">
+                    <span class="font-bold text-slate-700 truncate">${sale.cliente}</span>
+                    <span class="text-xs text-slate-400 truncate max-w-[150px]" title="${sale.email}">${sale.email}</span>
+                </div>
+                
+                <!-- Income & Badge -->
+                <div class="col-span-2 text-right flex flex-col items-end gap-1">
+                    <span class="font-black ${sale.es_canje ? 'text-purple-600' : 'text-slate-900'}">${ingresoTxt}</span>
+                    ${sale.ingreso < sale.precioOriginal ? `<span class="text-[10px] text-slate-400 line-through">${originalTxt}</span>` : ''}
+                    <div class="scale-90 origin-right">${statusBadge}</div>
+                </div>
+            </div>
+        `;
+
+        ui.salesList.appendChild(row);
     });
 }
 // ============================================================================

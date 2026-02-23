@@ -3,9 +3,10 @@
    Gestiona la visualización y descarga de materiales comprados.
    ========================================= */
 
-import { auth, db } from "../../assets/js/firebase-app.js";
+import { auth, db, functions } from "../../assets/js/firebase-app.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-functions.js";
 
 // 1. Referencias al DOM
 const ui = {
@@ -325,10 +326,16 @@ function renderLibrary() {
                             </button>
                             
                             <!-- Download/Access (Styled like 'Add' button but adapted) -->
+                            ${isUrl ? `
                             <a href="${res.url}" target="_blank" 
                                class="download-btn h-7 px-3 flex-shrink-0 rounded-lg ${primaryBtnColor} text-white text-[10px] font-bold flex items-center justify-center gap-1 hover:brightness-110 transition-all shadow-sm active:scale-95 whitespace-nowrap no-underline">
-                                <i class="fa-solid ${btnIcon}"></i> <span>${isUrl ? 'Acceder' : 'Descargar'}</span>
+                                <i class="fa-solid ${btnIcon}"></i> <span>Acceder</span>
                             </a>
+                            ` : `
+                            <button id="btn-download-${res.id}" class="download-btn h-7 px-3 flex-shrink-0 rounded-lg ${primaryBtnColor} text-white text-[10px] font-bold flex items-center justify-center gap-1 hover:brightness-110 transition-all shadow-sm active:scale-95 whitespace-nowrap no-underline">
+                                <i class="fa-solid ${btnIcon}"></i> <span>Descargar</span>
+                            </button>
+                            `}
                         </div>
                     </div>
                 </div>
@@ -360,13 +367,52 @@ function renderLibrary() {
         }
 
         // El botón de descarga también debe evitar abrir el modal si ya es un enlace directo
-        const downloadBtn = card.querySelector('.download-btn');
-        downloadBtn.onclick = (e) => {
-            e.stopPropagation();
-        };
+        if (!isUrl) {
+            const downloadBtn = card.querySelector('.download-btn');
+            if (downloadBtn) {
+                downloadBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    handleSecureDownload(res, downloadBtn);
+                };
+            }
+        } else {
+            const accessLink = card.querySelector('.download-btn');
+            if (accessLink) {
+                accessLink.onclick = (e) => {
+                    e.stopPropagation();
+                };
+            }
+        }
 
         ui.container.appendChild(card);
     });
+}
+
+// NUEVO FUNCIONAMIENTO CON CLOUD FUNCTIONS
+async function handleSecureDownload(product, btnElement) {
+    const originalContent = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+
+    try {
+        const getDownloadUrl = httpsCallable(functions, 'getDownloadUrl');
+        const result = await getDownloadUrl({ productId: product.id });
+        const { url } = result.data;
+
+        // Abre URL segura en nueva pestaña
+        window.open(url, '_blank');
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Descargando';
+        setTimeout(() => {
+            btnElement.disabled = false;
+            btnElement.innerHTML = originalContent;
+        }, 2000);
+
+    } catch (error) {
+        console.error("Error Obteniendo URL Segura:", error);
+        alert(error.message || "Error al obtener el archivo. Por favor, intenta de nuevo o comunícate con soporte.");
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalContent;
+    }
 }
 
 function showEmptyState() {
@@ -557,13 +603,27 @@ function openProductModal(product) {
 
     // 3. Setup Primary Button (Download/Access)
     const isUrl = product.tipo_entrega === 'url';
-    modal.btnPrimary.href = product.url; // Ya es seguro porque product.url viene de la DB
-
     const btnIconInfo = isUrl ? '<i class="fa-solid fa-arrow-up-right-from-square"></i>' : '<i class="fa-solid fa-download"></i> class="group-hover:animate-bounce"';
     const btnText = isUrl ? 'Acceder al Material' : 'Descargar Material';
 
     modal.btnPrimary.className = `h-14 px-6 font-bold rounded-2xl text-white shadow-lg active:scale-95 flex items-center justify-center gap-2 group no-underline transition-all ${isUrl ? 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-200' : 'bg-slate-900 hover:bg-indigo-600 shadow-indigo-200'}`;
     modal.btnPrimary.innerHTML = `<span>${btnText}</span> ${isUrl ? '<i class="fa-solid fa-arrow-up-right-from-square"></i>' : '<i class="fa-solid fa-download group-hover:animate-bounce"></i>'}`;
+
+    // Si es un enlace a Archivo, no lo ponemos en el href. Usamos onclick para la Cloud Function
+    // Quitamos los eventos onclick anteriores
+    modal.btnPrimary.replaceWith(modal.btnPrimary.cloneNode(true));
+    modal.btnPrimary = document.getElementById('modalBtnPrimary'); // readquirir referencia tras clonar
+
+    if (isUrl) {
+        modal.btnPrimary.href = product.url; // Seguro pasarlo directo
+        modal.btnPrimary.removeAttribute('onclick');
+    } else {
+        modal.btnPrimary.removeAttribute('href'); // Quitar para que no navegue
+        modal.btnPrimary.onclick = (e) => {
+            e.preventDefault();
+            handleSecureDownload(product, modal.btnPrimary);
+        };
+    }
 
     // 4. Mostrar Modal
     modal.container.classList.remove('hidden');

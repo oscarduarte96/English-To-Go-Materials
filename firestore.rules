@@ -15,10 +15,11 @@ service cloud.firestore {
       allow write: if false; // Admin only
     }
 
-    // Coupons - Public Read for Validation
+    // Coupons - Public Read for Validation (No Listing)
     match /coupons/{couponId} {
-      allow read: if true;
-      allow write: if false; // Admin only (Modified for Production Security)
+      allow get: if true;
+      allow list: if false; // Prevents generic fetching of all coupons
+      allow write: if false; // Admin only
     }
 
     // User Private Data
@@ -27,16 +28,17 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Orders - Allow Create & Read for Auth Users
+    // Orders - Secure Creation & Read
     match /orders/{orderId} {
-      allow create: if request.auth != null; // Checkout needs to create orders
-      // Optimized Rule: Buyer OR Author (via author_ids array)
+      // SOLO permitir creación si el estado inicial es 'pending' (Evita compras falsas)
+      allow create: if request.auth != null && request.resource.data.status == 'pending'; 
       // Optimized Rule: Buyer OR Author (via author_ids array)
       allow read: if request.auth != null && (
         resource.data.user_id == request.auth.uid || 
         (resource.data.keys().hasAny(['author_ids']) && request.auth.uid in resource.data.author_ids)
       );
-      allow update: if request.auth != null && resource.data.user_id == request.auth.uid; // Optional: if user needs to update order status
+      // BLOQUEAR actualizaciones manuales desde el cliente (solo las Cloud Functions deben completarlas)
+      allow update: if false; 
     }
 
     // Validation Requests

@@ -5,8 +5,9 @@ service firebase.storage {
     // 1. PRODUCTOS (Archivos de venta)
     // Estructura: /products/{userId}/{fileName}
     match /products/{userId}/{fileName} {
-      // Cualquiera puede leer (necesario para la descarga post-compra)
-      allow read: if true;
+      // Parche de Seguridad Final: Nadie puede leer desde rutas directas.
+      // Todo acceso de lectura se maneja vía Signed URLs emitidas por Cloud Functions.
+      allow read: if false;
       
       // SOLO el dueño de la carpeta puede subir/borrar
       // Limitamos el tamaño a 500MB por seguridad

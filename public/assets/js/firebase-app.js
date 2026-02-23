@@ -9,6 +9,8 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 
+import { getFunctions } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-functions.js";
+
 // 2. Tu Credencial de Proyecto (Materials-To-Go)
 // Nota: Estos datos son públicos en el cliente, la seguridad real se maneja con Reglas de Seguridad en Firebase Console.
 const firebaseConfig = {
@@ -28,6 +30,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);       // Autenticación (Login/Registro)
 const db = getFirestore(app);    // Base de Datos (Usuarios, Ventas)
 const storage = getStorage(app); // Almacenamiento (Archivos PDF, IMG)
+const functions = getFunctions(app); // Cloud Functions (Backend)
 
 // 5. Diagnóstico en Consola (Solo para desarrollo)
 // Te ayudará a confirmar visualmente que el "cerebro" cargó correctamente.
@@ -35,9 +38,9 @@ console.log(
     "%c🔥 FIREBASE CONNECTED%c\n%s",
     "background:#4f46e5; color:white; padding:4px 8px; border-radius:4px; font-weight:bold;",
     "color:#64748b;",
-    `Project: ${firebaseConfig.projectId} | Services: Auth, DB, Storage`
+    `Project: ${firebaseConfig.projectId} | Services: Auth, DB, Storage, Functions`
 );
 
 // 6. Exportación Modular
-// Esto permite que otros archivos digan: "import { auth } from './firebase-app.js'"
-export { app, auth, db, storage };
+// Esto permite que otros archivos digan: "import { auth, functions } from './firebase-app.js'"
+export { app, auth, db, storage, functions };

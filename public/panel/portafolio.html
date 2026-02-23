@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Mi Portafolio | English To Go Materials</title>
 
     <link rel="icon" href="../assets/img/favicon.ico">
@@ -32,11 +35,11 @@
         }
     </script>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=1771871411723" rel="stylesheet">
 
-    <link rel="stylesheet" href="../assets/css/variables.css?v=3.1">
-    <link rel="stylesheet" href="../assets/css/global.css?v=3.1">
-    <link rel="stylesheet" href="../assets/css/responsive.css?v=3.1">
+    <link rel="stylesheet" href="../assets/css/variables.css?v=1771871411723">
+    <link rel="stylesheet" href="../assets/css/global.css?v=1771871411723">
+    <link rel="stylesheet" href="../assets/css/responsive.css?v=1771871411723">
 
     <style>
         .custom-scroll::-webkit-scrollbar {
@@ -217,9 +220,9 @@
         }
     </style>
 
-    <script type="module" src="../assets/js/components.js?v=3.1"></script>
+    <script type="module" src="../assets/js/components.js?v=1771871411723"></script>
 
-    <script type="module" src="./js/guard.js?v=3.1"></script>
+    <script type="module" src="./js/guard.js?v=1771871411723"></script>
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -297,6 +300,34 @@
                     <p class="text-xs text-slate-400">Ganancias acumuladas de todas tus ventas.</p>
                 </div>
             </div>
+
+            <!-- Reporte de Ventas -->
+            <section class="mb-10">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-900">
+                        <i class="fa-solid fa-money-bill-transfer text-emerald-600 mr-2"></i> Historial de Ventas
+                    </h2>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <!-- Desktop Table Header -->
+                    <div
+                        class="hidden md:grid grid-cols-12 gap-4 p-4 bg-slate-50 border-b border-slate-100 font-bold text-xs text-slate-400 uppercase tracking-wider">
+                        <div class="col-span-3">Fecha</div>
+                        <div class="col-span-4">Producto</div>
+                        <div class="col-span-3">Cliente</div>
+                        <div class="col-span-2 text-right">Ingreso Real</div>
+                    </div>
+
+                    <!-- Sales List Container -->
+                    <div id="salesList" class="divide-y divide-slate-100">
+                        <!-- Empty State (Initial) -->
+                        <div class="p-8 text-center text-slate-400 text-sm">
+                            Cargando historial...
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Inventario de Materiales -->
             <section>
@@ -479,9 +510,9 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="../assets/js/firebase-app.js?v=3.1"></script>
-    <script type="module" src="../assets/js/utils.js?v=3.1"></script>
-    <script type="module" src="./js/portafolio.js?v=3.1"></script>
+    <script type="module" src="../assets/js/firebase-app.js?v=1771871411723"></script>
+    <script type="module" src="../assets/js/utils.js?v=1771871411723"></script>
+    <script type="module" src="./js/portafolio.js?v=1771871411723"></script>
 
 </body>
 

@@ -627,12 +627,34 @@ async function loadCreatorData() {
             // FIX: Only count completed orders (consistency with portafolio.js)
             if (orderData.status !== 'completed') return;
 
-            // Double check items just to be sure calculation is correct
+            // Lógica de Ventas / Ingresos (Estandarizada con portafolio.js)
             if (orderData.items && Array.isArray(orderData.items)) {
+                // Determinar factor de descuento global de la orden
+                let discountFactor = 1;
+
+                if (orderData.coupon_discount_percent === 100) {
+                    discountFactor = 0;
+                } else if (orderData.coupon_discount_percent > 0) {
+                    discountFactor = 1 - (orderData.coupon_discount_percent / 100);
+                } else if (orderData.original_total > 0 && orderData.final_total < orderData.original_total) {
+                    // Descuento fijo prorrateado (fallback)
+                    discountFactor = orderData.final_total / orderData.original_total;
+                }
+
                 orderData.items.forEach(item => {
-                    if (item.autor_id === currentUser.uid) {
+                    // Verificar que el item pertenece a este autor
+                    // Convertir IDs a String para evitar errores de tipo
+                    const itemAutorId = String(item.autor_id);
+                    const currentUid = String(currentUser.uid);
+
+                    if (itemAutorId === currentUid) {
                         totalSales++;
-                        totalIncome += (Number(item.precio) || 0);
+
+                        const precioBase = Number(item.precio) || 0;
+                        // Calcular Ingreso Real (aplicando factor de descuento)
+                        const ingresoReal = Math.floor(precioBase * discountFactor);
+
+                        totalIncome += ingresoReal;
 
                         // NEW: Increment product specific sales count
                         if (item.id) {
